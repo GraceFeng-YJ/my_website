@@ -1,0 +1,167 @@
+---
+categories:
+- ''
+- ''
+date: '2020-10-20'
+description: Run linear regressions to estimate the alpha and beta of APPL
+draft: false
+image: pic13.jpg
+keywords: ''
+slug: blog7
+title: Capital Asset Pricing Model (CAPM)
+---
+
+
+```{r, setup, echo=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+
+```{r load-libraries, warning=FALSE, message=FALSE, echo=FALSE}
+library(mosaic)   # Load additional packages here 
+library(tidyverse)  # Loads tidyquant, tidyverse, lubridate, xts, quantmod, TTR 
+library(ggformula)
+library(GGally)
+library(tidyquant)
+library(ggfortify)
+options(scipen=999)
+```
+
+
+## Loading the data
+
+```{r load-data, cache=TRUE}
+myStocks <- c("AAPL","JPM","DIS","DPZ","ANF","SPY" ) %>%
+  
+  tq_get(get  = "stock.prices",
+         from = "2017-08-01",
+         to   = "2020-09-30") %>%
+  
+  group_by(symbol) 
+
+str(myStocks) # examine the structure of the resulting data frame
+```
+
+For each ticker symbol, the data frame contains its `symbol`, the `date`, the prices for `open`,`high`, `low` and `close`, and the `volume`, or how many stocks were traded on that day. More importantly, the data frame contains the `adjusted` closing price, which adjusts for any stock splits and/or dividends paid and this is what we will be using for our analyses.
+
+Towards the end, you a see a line `- attr(*, "group_sizes")= int  1761 1761 1761 1761 1761 1761 1761 1761`.
+Since we grouped our data by its ticker symbol, you can see that over the course of 7 years (2011-2017) we have 1761 trading days, or roughly 250 trading days per year. 
+
+Financial performance and CAPM analysis depend on __returns__ and not on __adjusted closing prices__. So given the adjusted closing prices, our firststep is to calculate daily and monthly returns. 
+
+```{r calculate_returns,include=FALSE}
+
+#calculate monthly  returns
+myStocks_returns_monthly <- myStocks %>%
+  
+  tq_transmute(select     = adjusted, 
+               mutate_fun = periodReturn, 
+               period     = "monthly", 
+               type       = "arithmetic",
+               col_rename = "monthly.returns") 
+
+#calculate daily returns
+myStocks_returns_daily <- myStocks %>%
+  
+  tq_transmute(select     = adjusted, 
+               mutate_fun = periodReturn, 
+               period     = "daily", 
+               type       = "log",
+               col_rename = "daily.returns")  
+```
+
+
+For yearly and monthly data, we assume discrete changes, so we the formula used to calculate the return for month __(t+1)__ is 
+
+$Return(t+1)= \frac{Adj.Close(t+1)}{Adj.Close (t)}-1$
+
+For daily data we use log returns,  or $Return(t+1)= LN\frac{Adj.Close(t+1)}{Adj.Close (t)}$
+
+The reason we use log returns are:
+
+a.	Compound interest interpretation; namely, that the log return can be interpreted as the continuously (rather than discretely) compounded rate of return
+
+b.	Log returns are assumed to follow a normal distribution
+
+c.	Log return over n periods is the sum of n log returns
+
+
+We may want to see what our investments would have grown to, of we had invested $1000 in each of the assets  on Aug 1, 2017. 
+
+```{r wealth_index, echo=FALSE}
+#calculate 'daily'wealth' returns, or what a 100 investment will grow to 
+cumulative_wealth <- myStocks_returns_daily %>%
+  
+  mutate(wealth.index = 1000 * cumprod(1 + daily.returns))
+
+
+ggplot(cumulative_wealth, aes(x=date, y = wealth.index))+
+  
+  geom_line(aes(colour=symbol))+
+  
+  labs(x="Year", 
+       y="Value of investment", 
+       title = "Growth of a $1000 investment over time") +
+  scale_y_continuous(labels = scales::dollar) +
+  
+  theme_minimal()+
+  
+  NULL
+```
+
+## Scatterplots of individual stocks returns versus S&P500 Index returns.
+
+Besides these exploratory graphs of returns and price evolution, we also need to create scatterplots among the returns of different stocks. `ggpairs` crates a scattterplot matrix that shows the distribution of returns for each stock, and a matrix of scatter plots and correlations. This may take a while to run, but look at the last row, the last column and along the diagonal.
+
+
+```{r correlationMatrix, echo=FALSE}
+#calculate daily returns
+monthly_capm_returns <- myStocks_returns_monthly %>%
+  
+            spread(key = symbol, value = monthly.returns)  #just keep the period returns grouped by symbol
+
+
+ggpairs(monthly_capm_returns[-1]) #exclude "Date", the first column, from the correlation matrix
+
+```
+
+The next step is to fit a liner regression model to calculate the $\beta$ of AAPL. After fitting the model, we produce a summary table for the regression model, a 95% confidence interval for the coefficients, and an ANOVA table that shows the split of variability (`Sum Sq`) of AAPL returns and what portion ix explained by the market (`SPY`) versus the unexplained residuals.
+
+Besides fitting the model, we should also have a look at the residuals. Do they seem to follow a Normal Distribution? Is there a pattern in the residuals, or do they appear to be 'random'? Is the variance of the residuals constant or does it seem to increase with increasing values of X?
+
+
+First, we plot the residuals vs. the fitted (or predicted) values. This is a standard regression diagnostic plot to check whether there is no pattern in the residuals, as well as to test for heteroscedasticity, or whether the residuals appear to have unequal, non-constant variance.
+
+The second thing we must check is whether the residuals follow a Normal distribution. A normal scores, or a QQ plot,  allows us to check for skewness, kurtosis and outliers.
+
+```{r AAPL_CAPM, echo=FALSE, warning=FALSE}
+
+ggplot(monthly_capm_returns, aes(x=SPY, y = AAPL))+
+  
+  geom_point()+
+  
+  geom_smooth(method="lm", se=FALSE)
+
+aapl_capm <- lm(AAPL ~ SPY, data = monthly_capm_returns)
+
+mosaic::msummary(aapl_capm)
+
+aapl_capm %>% broom::tidy(conf.int = TRUE)
+
+aapl_capm %>% broom::glance()
+
+autoplot(aapl_capm)
+```
+
+>From the result of regession, we could see the beta of APPL is 1.27993 and the adjusted R-squared is 0.4239. 
+For the residuals vs fitted plot, residuals are random, with no pattern, and around Y = 0. For the Normal Q-Q plot, deviations from a straight line indicate that residuals follows a Normal distribution.

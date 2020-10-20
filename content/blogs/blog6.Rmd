@@ -1,0 +1,293 @@
+---
+categories:
+- ""
+- ""
+date: "2020-10-20"
+description:  What is the decisive factor of income increase?
+draft: false
+image: pic12.jpg
+keywords: ""
+slug: blog6
+title: IBM HR Analytics
+---
+
+
+```{r, setup, echo=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+
+
+```{r load-libraries, warning=FALSE, message=FALSE, echo=FALSE}
+library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
+library(mosaic)
+library(ggthemes)
+library(lubridate)
+library(fivethirtyeight)
+library(here)
+library(skimr)
+library(janitor)
+library(vroom)
+library(tidyquant)
+library(rvest)    # scrape websites
+library(purrr)  
+library(lubridate) #to handle dates
+```
+
+```{r}
+hr_dataset <- read_csv(here::here("data", "datasets_1067_1925_WA_Fn-UseC_-HR-Employee-Attrition.csv"))#import the date set and name it hr_dataset
+glimpse(hr_dataset)#see the variables of he_dataset
+```
+
+```{r}
+hr_cleaned <- hr_dataset %>% 
+  
+  clean_names() %>% 
+  
+  mutate(
+    education = case_when(
+      education == 1 ~ "Below College",
+      education == 2 ~ "College",
+      education == 3 ~ "Bachelor",
+      education == 4 ~ "Master",
+      education == 5 ~ "Doctor"
+    ),
+    environment_satisfaction = case_when(
+      environment_satisfaction == 1 ~ "Low",
+      environment_satisfaction == 2 ~ "Medium",
+      environment_satisfaction == 3 ~ "High",
+      environment_satisfaction == 4 ~ "Very High"
+    ),
+    job_satisfaction = case_when(
+      job_satisfaction == 1 ~ "Low",
+      job_satisfaction == 2 ~ "Medium",
+      job_satisfaction == 3 ~ "High",
+      job_satisfaction == 4 ~ "Very High"
+    ),
+    performance_rating = case_when(
+      performance_rating == 1 ~ "Low",
+      performance_rating == 2 ~ "Good",
+      performance_rating == 3 ~ "Excellent",
+      performance_rating == 4 ~ "Outstanding"
+    ),
+    work_life_balance = case_when(
+      work_life_balance == 1 ~ "Bad",
+      work_life_balance == 2 ~ "Good",
+      work_life_balance == 3 ~ "Better",
+      work_life_balance == 4 ~ "Best"
+    )
+  ) %>% 
+  
+  select(age, attrition, daily_rate, department,
+         distance_from_home, education,
+         gender, job_role,environment_satisfaction,
+         job_satisfaction, marital_status,
+         monthly_income, num_companies_worked, percent_salary_hike,
+         performance_rating, total_working_years,
+         work_life_balance, years_at_company,
+         years_since_last_promotion)
+```
+
+1. How often do people leave the company (`attrition`)
+```{r}
+hr_cleaned%>%
+  
+  summarise(attr_rate=count(hr_cleaned$attrition=="Yes")/count(attrition))
+#count the number of attrition which equals to yes and divide by the whole number of attrition
+```
+
+There is a 19.2% attrition rate for IBM. Compared to the technology average of around 13%, this is high.
+
+2. How are `age`, `years_at_company`, `monthly_income` and `years_since_last_promotion` distributed? can you roughly guess which of these variables is closer to Normal just by looking at summary statistics? 
+```{r}
+summary(hr_cleaned)#summary statistics of hr_cleaned
+
+ggplot(hr_cleaned, aes(x = age)) + 
+  
+  geom_density()+labs(title = "Density plot of age", y = "Density",  x = "Age")
+#draw the density plot of age with the use of ggplot
+
+ggplot(hr_cleaned, aes(x = years_at_company)) + geom_density()+labs(title = "Density plot of years at company", y = "Density",  x = "Years at company")
+#draw the density plot of years at company with the use of ggplot
+
+ggplot(hr_cleaned, aes(x = monthly_income)) + geom_density()+labs(title = "Density plot of monthly income", y = "Density",  x = "Monthly income ")
+#draw the density plot of monthly income with the use of ggplot
+
+ggplot(hr_cleaned, aes(x = years_since_last_promotion)) + geom_density()+labs(title = "Density plot of years since last promotion", y = "Density",  x = "Years since last promotion")
+#draw the density plot of years since last promotion with the use of ggplot
+```
+
+I roughly guess variable age is closer to Normal by looking at summary statistics. Age density plot indicates a roughly normal distribution with the mean value of about 34 years old. Years_at_company density plot shows a right skewed distribution with a lot of new employees at IBM. Most have been at IBM for less than 10 years. This also explains the high attrition rate, with only few employees staying in the long run. Monthly income density plot also shows a right skewed distribution. Most employees are paid close to 3000 per month, which only few having monthly salaries of over 7500.It might be another indicator of high attrition rate. From the Years since last promotion density plot, IBM shows good career progression opportunities with the mean of years since last promotion being close to 1. 
+
+3. How are `job_satisfaction` and `work_life_balance` distributed? Don't just report counts, but express categories as % of total
+
+```{r}
+library(scales)
+
+all_job_sat <- hr_cleaned %>%  
+  
+  count(job_satisfaction)  %>%  
+  
+  summarise(total = sum(n))
+
+#calculate the whole number of job_satisfaction
+job_satisfaction<-hr_cleaned%>%
+  
+  summarise(very_high = percent(count(job_satisfaction == "Very High") / as.integer(all_job_sat)), high = percent(count(job_satisfaction == "High")/ as.integer(all_job_sat)), medium = percent(count(job_satisfaction == "Medium")/ as.integer(all_job_sat)), low = percent(count(job_satisfaction == "Low")/ as.integer(all_job_sat)),.groups = 'drop')%>%
+  
+  rename("Very High"=very_high, "High"=high, "Medium"=medium, "Low"=low)
+#calculate the percent rates of different categories of job satisfaction
+
+job_satisfaction
+
+all_work_life_bal<-hr_cleaned%>%
+  
+  count(work_life_balance)%>%
+  
+  summarise(total = sum(n))
+#calculate the whole number of work_life_balance
+
+work_life_bal<-hr_cleaned%>%
+  
+  summarise(bad = percent(count(work_life_balance == "Bad") / as.integer(all_work_life_bal)), good = percent(count(work_life_balance == "Good")/ as.integer(all_work_life_bal)), better = percent(count(work_life_balance == "Better")/ as.integer(all_work_life_bal)), best = percent(count(work_life_balance == "Best")/ as.integer(all_work_life_bal)),.groups = 'drop') %>%
+  
+  rename("Bad"=bad,"Good"=good, "Better"=better, "Best"=best)
+#calculate the percent rates of different categories of work life balance
+
+work_life_bal
+```
+
+Job satisfaction seems evenly distributed with a higher concentration in terms of very high and high jointly comprising sixty-one percent of respondents, but also a significant twenty percent for both low and medium.However, work life balance shows a stark concentration of results near the center of the distribution with over eighty percent of respondents claiming good or better, with some outliers on both tails in terms of bad and best.
+
+4. Is there any relationship between monthly income and education? Monthly income and gender?
+```{r}
+ggplot(hr_cleaned, aes(x = monthly_income, colour = education)) + 
+  
+  geom_density() + 
+  
+  labs(title = "Relationship between monthly income and education", y = "Density",  x = "Monthly income")
+#draw the density plot of monthly income for different education levels
+
+ggplot(hr_cleaned, aes(x = monthly_income, y = reorder(education, monthly_income))) + 
+
+  geom_boxplot() + 
+  
+  labs(title = "Relationship between monthly income and education", y = "Education", x = "Monthly income")
+#draw the boxplot of monthly income for different education levels
+
+ggplot(hr_cleaned, aes(x = monthly_income, colour = gender)) + 
+
+  geom_density() + 
+  
+  labs(title = "Relationship between monthly income and gender",  y = "Density",  x = "Monthly income")
+#draw the density plot of monthly income for male and female
+
+ggplot(hr_cleaned, aes(x = monthly_income, y = reorder(gender, monthly_income))) +
+  
+  geom_boxplot() + 
+  
+  labs(title = "Relationship between monthly income and gender", y = "Gender", x = "Monthly income")
+#draw the boxplot of monthly income for male and female
+```
+
+Education: There is a trend that higher education level would indicate the higher income.Employees with below college education earn on average the least at 3000 per month, with only very few earning more than 6875 per month.The highest earning employees have a doctors degree with the mean about 6250 per month and a second noticeable amount of employees averaging 16250 per month.
+
+Gender: The graph shows a fairly similar distribution of genders at the same income level,albeit with some variations, and the majority earns in the region of 3000, with the distribution of higher earners decreasing as the monthly income level rises, in line with one's expectations. From the density plot, the average female monthly income is a little bit higher than that of the male employees.
+
+5. Plot a boxplot of income vs job role. Make sure the highest-paid job roles appear first
+```{r}
+ggplot(hr_cleaned, aes(x = monthly_income, y = reorder(job_role, monthly_income))) +
+  
+  geom_boxplot() + 
+  
+  labs(title = "Relationship between monthly income and job role", y = "Job role", x = "Monthly income")
+#draw the boxplot of monthly income for different job roles
+```
+
+From the boxplot, there is a trend that the higher level of job role would indicate the higher monthly income. It is reasonable because employees with higher-level job roles usually have more experiences or expertise which could create value for the company, as the reward, the monthly income would be higher. In addition, the average monthly incomes of sales representative, laboratory technician, research scientist and human resources are almost the same. These job roles are considered as the entry level of the company. The average monthly incomes of sales executive, manufacturing director and healthcare representative are almost the same. These job roles are considered as the middle level of the company and there are significant increases of monthly income compared with that of the entry level. The highest average monthly income belongs to manager and the second highest is research director. A income gap exists between these two job roles with the other job roles. 
+
+6. Calculate and plot a bar chart of the mean (or median?) income by education level.
+```{r}
+hr_cleaned %>% 
+  
+  group_by(education) %>% 
+  
+  summarise(mean_income = mean(monthly_income),.groups = 'drop') %>% 
+  
+  ggplot(aes(y = reorder(education, mean_income),x = mean_income)) + 
+  
+  geom_col(width=0.3) + 
+  
+  labs(title = "Mean Income by education level", y = "Education Level", x = "Monthly income") 
+#group hr_cleaned by education, calculate the mean value of income and draw the plot with x-axe is the mean value of income and y-axe is the education level
+
+hr_cleaned %>% 
+  
+  group_by(education) %>% 
+  
+  summarise(med_income = median(monthly_income),.groups = 'drop') %>% 
+  
+  ggplot(aes(y = reorder(education, med_income),x = med_income)) + 
+  
+  geom_col(width=0.3) + 
+  
+  labs(title = "Median Income by education level", y = "Education Level", x = "Monthly income") #group hr_cleaned by education, calculate the median value of income and draw the plot with x-axe is the median value of income and y-axe is the education level
+```
+
+From both plots, it all indicates that higher educational level would result in the higher monthly income, not matter the mean value or the median value. It could be explained that employees with higher educational level would be more knowledgeable and professional. They could solve the problems of the company with the use of expertise and bring in profits. Therefore, they could get paid better. 
+
+7. Plot the distribution of income by education level. Use a facet_wrap and a theme from `ggthemes`
+```{r}
+hr_cleaned %>% 
+  
+  ggplot(aes(x = monthly_income)) + 
+  
+  geom_density() + 
+  
+  facet_wrap(~ education) + 
+  
+  theme_igray() + 
+  
+  labs(title = "Distribution of income by education level", y = "Density", x = "Education level")
+#draw the density plot of income by the education level
+```
+
+From these density plots, all indicate the right skewness. None of these plots are normally distributed. For the level of below college, it is least evenly distributed and the majority of income is below 5000. As the increase of education level, the income is more evenly distributed.It might be explained that employees with higher educational would have more stable income. 
+
+8. Plot income vs age, faceted by `job_role`
+```{r}
+hr_cleaned %>% 
+  
+  ggplot(aes(y = monthly_income, x=age)) +
+  
+  geom_point()+ 
+  
+  facet_wrap(~job_role) + 
+  
+  labs(title = "Income by age", x = "Age", y = "Monthly income") 
+#draw the plot with x_axe is age and y-axe is monthly income
+```
+
+According to the plots, it is roughly indicates that as age increases, income would increase. However, for different job roles, the speed of increase in income is not the same. For healthcare representative and sales executive, as age increases, the income increases relatively rapidly.Also, human resources have enough increase space.  For manager and research director job roles, the increase pattern is obvious while for laboratory technician, research scientist and sales representative job roles, the increase of income is not very obvious as the age incomes. As a result, the decisive factor of income increase might be more correlated with the job funcation of this role rather than the age solely.
+
+>Summary
+
+>1.There is a 19.2% attrition rate for IBM. Compared to the technology average of around 13%, this is high.
+>2.I roughly guess variable age is closer to Normal by looking at summary statistics. Age density plot indicates a roughly normal distribution with the mean value of about 34 years old. Years_at_company density plot shows a right skewed distribution with a lot of new employees at IBM. Most have been at IBM for less than 10 years. This also explains the high attrition rate, with only few employees staying in the long run. Monthly income density plot also shows a right skewed distribution. Most employees are paid close to 3000 per month, which only few having monthly salaries of over 7500.It might be another indicator of high attrition rate. From the Years since last promotion density plot, IBM shows good career progression opportunities with the mean of years since last promotion being close to 1. 
+>3.Job satisfaction seems evenly distributed with a higher concentration in terms of very high and high jointly comprising sixty-one percent of respondents, but also a significant twenty percent for both low and medium.However, work life balance shows a stark concentration of results near the center of the distribution with over eighty percent of respondents claiming good or better, with some outliers on both tails in terms of bad and best.
+>4.Education: There is a trend that higher education level would indicate the higher income.Employees with below college education earn on average the least at 3000 per month, with only very few earning more than 6875 per month.The highest earning employees have a doctors degree with the mean about 6250 per month and a second noticeable amount of employees averaging 16250 per month.
+Gender: The graph shows a fairly similar distribution of genders at the same income level,albeit with some variations, and the majority earns in the region of 3000, with the distribution of higher earners decreasing as the monthly income level rises, in line with one's expectations. From the density plot, the average female monthly income is a little bit higher than that of the male employees.
+>5.From the boxplot, there is a trend that the higher level of job role would indicate the higher monthly income. It is reasonable because employees with higher-level job roles usually have more experiences or expertise which could create value for the company, as the reward, the monthly income would be higher. In addition, the average monthly incomes of sales representative, laboratory technician, research scientist and human resources are almost the same. These job roles are considered as the entry level of the company. The average monthly incomes of sales executive, manufacturing director and healthcare representative are almost the same. These job roles are considered as the middle level of the company and there are significant increases of monthly income compared with that of the entry level. The highest average monthly income belongs to manager and the second highest is research director. A income gap exists between these two job roles with the other job roles. 
+>6.From both plots, it all indicates that higher educational level would result in the higher monthly income, not matter the mean value or the median value. It could be explained that employees with higher educational level would be more knowledgeable and professional. They could solve the problems of the company with the use of expertise and bring in profits. Therefore, they could get paid better. 
+>7.From these density plots, all indicate the right skewness. None of these plots are normally distributed. For the level of below college, it is least evenly distributed and the majority of income is below 5000. As the increase of education level, the income is more evenly distributed.It might be explained that employees with higher educational would have more stable income. 
+>8.According to the plots, it is roughly indicates that as age increases, income would increase. However, for different job roles, the speed of increase in income is not the same. For healthcare representative and sales executive, as age increases, the income increases relatively rapidly.Also, human resources have enough increase space.  For manager and research director job roles, the increase pattern is obvious while for laboratory technician, research scientist and sales representative job roles, the increase of income is not very obvious as the age incomes. As a result, the decisive factor of income increase might be more correlated with the job funcation of this role rather than the age solely.

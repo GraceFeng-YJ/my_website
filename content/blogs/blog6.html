@@ -1,0 +1,343 @@
+---
+categories:
+- ""
+- ""
+date: "2020-10-20"
+description:  What is the decisive factor of income increase?
+draft: false
+image: pic12.jpg
+keywords: ""
+slug: blog6
+title: IBM HR Analytics
+---
+
+
+
+<pre class="r"><code>hr_dataset &lt;- read_csv(here::here(&quot;data&quot;, &quot;datasets_1067_1925_WA_Fn-UseC_-HR-Employee-Attrition.csv&quot;))#import the date set and name it hr_dataset
+glimpse(hr_dataset)#see the variables of he_dataset</code></pre>
+<pre><code>## Rows: 1,470
+## Columns: 35
+## $ Age                      &lt;dbl&gt; 41, 49, 37, 33, 27, 32, 59, 30, 38, 36, 35, …
+## $ Attrition                &lt;chr&gt; &quot;Yes&quot;, &quot;No&quot;, &quot;Yes&quot;, &quot;No&quot;, &quot;No&quot;, &quot;No&quot;, &quot;No&quot;, …
+## $ BusinessTravel           &lt;chr&gt; &quot;Travel_Rarely&quot;, &quot;Travel_Frequently&quot;, &quot;Trave…
+## $ DailyRate                &lt;dbl&gt; 1102, 279, 1373, 1392, 591, 1005, 1324, 1358…
+## $ Department               &lt;chr&gt; &quot;Sales&quot;, &quot;Research &amp; Development&quot;, &quot;Research…
+## $ DistanceFromHome         &lt;dbl&gt; 1, 8, 2, 3, 2, 2, 3, 24, 23, 27, 16, 15, 26,…
+## $ Education                &lt;dbl&gt; 2, 1, 2, 4, 1, 2, 3, 1, 3, 3, 3, 2, 1, 2, 3,…
+## $ EducationField           &lt;chr&gt; &quot;Life Sciences&quot;, &quot;Life Sciences&quot;, &quot;Other&quot;, &quot;…
+## $ EmployeeCount            &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
+## $ EmployeeNumber           &lt;dbl&gt; 1, 2, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15, 16…
+## $ EnvironmentSatisfaction  &lt;dbl&gt; 2, 3, 4, 4, 1, 4, 3, 4, 4, 3, 1, 4, 1, 2, 3,…
+## $ Gender                   &lt;chr&gt; &quot;Female&quot;, &quot;Male&quot;, &quot;Male&quot;, &quot;Female&quot;, &quot;Male&quot;, …
+## $ HourlyRate               &lt;dbl&gt; 94, 61, 92, 56, 40, 79, 81, 67, 44, 94, 84, …
+## $ JobInvolvement           &lt;dbl&gt; 3, 2, 2, 3, 3, 3, 4, 3, 2, 3, 4, 2, 3, 3, 2,…
+## $ JobLevel                 &lt;dbl&gt; 2, 2, 1, 1, 1, 1, 1, 1, 3, 2, 1, 2, 1, 1, 1,…
+## $ JobRole                  &lt;chr&gt; &quot;Sales Executive&quot;, &quot;Research Scientist&quot;, &quot;La…
+## $ JobSatisfaction          &lt;dbl&gt; 4, 2, 3, 3, 2, 4, 1, 3, 3, 3, 2, 3, 3, 4, 3,…
+## $ MaritalStatus            &lt;chr&gt; &quot;Single&quot;, &quot;Married&quot;, &quot;Single&quot;, &quot;Married&quot;, &quot;M…
+## $ MonthlyIncome            &lt;dbl&gt; 5993, 5130, 2090, 2909, 3468, 3068, 2670, 26…
+## $ MonthlyRate              &lt;dbl&gt; 19479, 24907, 2396, 23159, 16632, 11864, 996…
+## $ NumCompaniesWorked       &lt;dbl&gt; 8, 1, 6, 1, 9, 0, 4, 1, 0, 6, 0, 0, 1, 0, 5,…
+## $ Over18                   &lt;chr&gt; &quot;Y&quot;, &quot;Y&quot;, &quot;Y&quot;, &quot;Y&quot;, &quot;Y&quot;, &quot;Y&quot;, &quot;Y&quot;, &quot;Y&quot;, &quot;Y&quot;,…
+## $ OverTime                 &lt;chr&gt; &quot;Yes&quot;, &quot;No&quot;, &quot;Yes&quot;, &quot;Yes&quot;, &quot;No&quot;, &quot;No&quot;, &quot;Yes&quot;…
+## $ PercentSalaryHike        &lt;dbl&gt; 11, 23, 15, 11, 12, 13, 20, 22, 21, 13, 13, …
+## $ PerformanceRating        &lt;dbl&gt; 3, 4, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3,…
+## $ RelationshipSatisfaction &lt;dbl&gt; 1, 4, 2, 3, 4, 3, 1, 2, 2, 2, 3, 4, 4, 3, 2,…
+## $ StandardHours            &lt;dbl&gt; 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, …
+## $ StockOptionLevel         &lt;dbl&gt; 0, 1, 0, 0, 1, 0, 3, 1, 0, 2, 1, 0, 1, 1, 0,…
+## $ TotalWorkingYears        &lt;dbl&gt; 8, 10, 7, 8, 6, 8, 12, 1, 10, 17, 6, 10, 5, …
+## $ TrainingTimesLastYear    &lt;dbl&gt; 0, 3, 3, 3, 3, 2, 3, 2, 2, 3, 5, 3, 1, 2, 4,…
+## $ WorkLifeBalance          &lt;dbl&gt; 1, 3, 3, 3, 3, 2, 2, 3, 3, 2, 3, 3, 2, 3, 3,…
+## $ YearsAtCompany           &lt;dbl&gt; 6, 10, 0, 8, 2, 7, 1, 1, 9, 7, 5, 9, 5, 2, 4…
+## $ YearsInCurrentRole       &lt;dbl&gt; 4, 7, 0, 7, 2, 7, 0, 0, 7, 7, 4, 5, 2, 2, 2,…
+## $ YearsSinceLastPromotion  &lt;dbl&gt; 0, 1, 0, 3, 2, 3, 0, 0, 1, 7, 0, 0, 4, 1, 0,…
+## $ YearsWithCurrManager     &lt;dbl&gt; 5, 7, 0, 0, 2, 6, 0, 0, 8, 7, 3, 8, 3, 2, 3,…</code></pre>
+<pre class="r"><code>hr_cleaned &lt;- hr_dataset %&gt;% 
+  
+  clean_names() %&gt;% 
+  
+  mutate(
+    education = case_when(
+      education == 1 ~ &quot;Below College&quot;,
+      education == 2 ~ &quot;College&quot;,
+      education == 3 ~ &quot;Bachelor&quot;,
+      education == 4 ~ &quot;Master&quot;,
+      education == 5 ~ &quot;Doctor&quot;
+    ),
+    environment_satisfaction = case_when(
+      environment_satisfaction == 1 ~ &quot;Low&quot;,
+      environment_satisfaction == 2 ~ &quot;Medium&quot;,
+      environment_satisfaction == 3 ~ &quot;High&quot;,
+      environment_satisfaction == 4 ~ &quot;Very High&quot;
+    ),
+    job_satisfaction = case_when(
+      job_satisfaction == 1 ~ &quot;Low&quot;,
+      job_satisfaction == 2 ~ &quot;Medium&quot;,
+      job_satisfaction == 3 ~ &quot;High&quot;,
+      job_satisfaction == 4 ~ &quot;Very High&quot;
+    ),
+    performance_rating = case_when(
+      performance_rating == 1 ~ &quot;Low&quot;,
+      performance_rating == 2 ~ &quot;Good&quot;,
+      performance_rating == 3 ~ &quot;Excellent&quot;,
+      performance_rating == 4 ~ &quot;Outstanding&quot;
+    ),
+    work_life_balance = case_when(
+      work_life_balance == 1 ~ &quot;Bad&quot;,
+      work_life_balance == 2 ~ &quot;Good&quot;,
+      work_life_balance == 3 ~ &quot;Better&quot;,
+      work_life_balance == 4 ~ &quot;Best&quot;
+    )
+  ) %&gt;% 
+  
+  select(age, attrition, daily_rate, department,
+         distance_from_home, education,
+         gender, job_role,environment_satisfaction,
+         job_satisfaction, marital_status,
+         monthly_income, num_companies_worked, percent_salary_hike,
+         performance_rating, total_working_years,
+         work_life_balance, years_at_company,
+         years_since_last_promotion)</code></pre>
+<ol style="list-style-type: decimal">
+<li>How often do people leave the company (<code>attrition</code>)</li>
+</ol>
+<pre class="r"><code>hr_cleaned%&gt;%
+  
+  summarise(attr_rate=count(hr_cleaned$attrition==&quot;Yes&quot;)/count(attrition))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   attr_rate
+##       &lt;dbl&gt;
+## 1     0.192</code></pre>
+<pre class="r"><code>#count the number of attrition which equals to yes and divide by the whole number of attrition</code></pre>
+<p>There is a 19.2% attrition rate for IBM. Compared to the technology average of around 13%, this is high.</p>
+<ol start="2" style="list-style-type: decimal">
+<li>How are <code>age</code>, <code>years_at_company</code>, <code>monthly_income</code> and <code>years_since_last_promotion</code> distributed? can you roughly guess which of these variables is closer to Normal just by looking at summary statistics?</li>
+</ol>
+<pre class="r"><code>summary(hr_cleaned)#summary statistics of hr_cleaned</code></pre>
+<pre><code>##       age        attrition           daily_rate    department       
+##  Min.   :18.0   Length:1470        Min.   : 102   Length:1470       
+##  1st Qu.:30.0   Class :character   1st Qu.: 465   Class :character  
+##  Median :36.0   Mode  :character   Median : 802   Mode  :character  
+##  Mean   :36.9                      Mean   : 802                     
+##  3rd Qu.:43.0                      3rd Qu.:1157                     
+##  Max.   :60.0                      Max.   :1499                     
+##  distance_from_home  education            gender            job_role        
+##  Min.   : 1.00      Length:1470        Length:1470        Length:1470       
+##  1st Qu.: 2.00      Class :character   Class :character   Class :character  
+##  Median : 7.00      Mode  :character   Mode  :character   Mode  :character  
+##  Mean   : 9.19                                                              
+##  3rd Qu.:14.00                                                              
+##  Max.   :29.00                                                              
+##  environment_satisfaction job_satisfaction   marital_status     monthly_income 
+##  Length:1470              Length:1470        Length:1470        Min.   : 1009  
+##  Class :character         Class :character   Class :character   1st Qu.: 2911  
+##  Mode  :character         Mode  :character   Mode  :character   Median : 4919  
+##                                                                 Mean   : 6503  
+##                                                                 3rd Qu.: 8379  
+##                                                                 Max.   :19999  
+##  num_companies_worked percent_salary_hike performance_rating
+##  Min.   :0.00         Min.   :11.0        Length:1470       
+##  1st Qu.:1.00         1st Qu.:12.0        Class :character  
+##  Median :2.00         Median :14.0        Mode  :character  
+##  Mean   :2.69         Mean   :15.2                          
+##  3rd Qu.:4.00         3rd Qu.:18.0                          
+##  Max.   :9.00         Max.   :25.0                          
+##  total_working_years work_life_balance  years_at_company
+##  Min.   : 0.0        Length:1470        Min.   : 0      
+##  1st Qu.: 6.0        Class :character   1st Qu.: 3      
+##  Median :10.0        Mode  :character   Median : 5      
+##  Mean   :11.3                           Mean   : 7      
+##  3rd Qu.:15.0                           3rd Qu.: 9      
+##  Max.   :40.0                           Max.   :40      
+##  years_since_last_promotion
+##  Min.   : 0.00             
+##  1st Qu.: 0.00             
+##  Median : 1.00             
+##  Mean   : 2.19             
+##  3rd Qu.: 3.00             
+##  Max.   :15.00</code></pre>
+<pre class="r"><code>ggplot(hr_cleaned, aes(x = age)) + 
+  
+  geom_density()+labs(title = &quot;Density plot of age&quot;, y = &quot;Density&quot;,  x = &quot;Age&quot;)</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-4-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the density plot of age with the use of ggplot
+
+ggplot(hr_cleaned, aes(x = years_at_company)) + geom_density()+labs(title = &quot;Density plot of years at company&quot;, y = &quot;Density&quot;,  x = &quot;Years at company&quot;)</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-4-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the density plot of years at company with the use of ggplot
+
+ggplot(hr_cleaned, aes(x = monthly_income)) + geom_density()+labs(title = &quot;Density plot of monthly income&quot;, y = &quot;Density&quot;,  x = &quot;Monthly income &quot;)</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-4-3.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the density plot of monthly income with the use of ggplot
+
+ggplot(hr_cleaned, aes(x = years_since_last_promotion)) + geom_density()+labs(title = &quot;Density plot of years since last promotion&quot;, y = &quot;Density&quot;,  x = &quot;Years since last promotion&quot;)</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-4-4.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the density plot of years since last promotion with the use of ggplot</code></pre>
+<p>I roughly guess variable age is closer to Normal by looking at summary statistics. Age density plot indicates a roughly normal distribution with the mean value of about 34 years old. Years_at_company density plot shows a right skewed distribution with a lot of new employees at IBM. Most have been at IBM for less than 10 years. This also explains the high attrition rate, with only few employees staying in the long run. Monthly income density plot also shows a right skewed distribution. Most employees are paid close to 3000 per month, which only few having monthly salaries of over 7500.It might be another indicator of high attrition rate. From the Years since last promotion density plot, IBM shows good career progression opportunities with the mean of years since last promotion being close to 1.</p>
+<ol start="3" style="list-style-type: decimal">
+<li>How are <code>job_satisfaction</code> and <code>work_life_balance</code> distributed? Don’t just report counts, but express categories as % of total</li>
+</ol>
+<pre class="r"><code>library(scales)
+
+all_job_sat &lt;- hr_cleaned %&gt;%  
+  
+  count(job_satisfaction)  %&gt;%  
+  
+  summarise(total = sum(n))
+
+#calculate the whole number of job_satisfaction
+job_satisfaction&lt;-hr_cleaned%&gt;%
+  
+  summarise(very_high = percent(count(job_satisfaction == &quot;Very High&quot;) / as.integer(all_job_sat)), high = percent(count(job_satisfaction == &quot;High&quot;)/ as.integer(all_job_sat)), medium = percent(count(job_satisfaction == &quot;Medium&quot;)/ as.integer(all_job_sat)), low = percent(count(job_satisfaction == &quot;Low&quot;)/ as.integer(all_job_sat)),.groups = &#39;drop&#39;)%&gt;%
+  
+  rename(&quot;Very High&quot;=very_high, &quot;High&quot;=high, &quot;Medium&quot;=medium, &quot;Low&quot;=low)
+#calculate the percent rates of different categories of job satisfaction
+
+job_satisfaction</code></pre>
+<pre><code>## # A tibble: 1 x 4
+##   `Very High` High  Medium Low  
+##   &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;
+## 1 31%         30%   19%    20%</code></pre>
+<pre class="r"><code>all_work_life_bal&lt;-hr_cleaned%&gt;%
+  
+  count(work_life_balance)%&gt;%
+  
+  summarise(total = sum(n))
+#calculate the whole number of work_life_balance
+
+work_life_bal&lt;-hr_cleaned%&gt;%
+  
+  summarise(bad = percent(count(work_life_balance == &quot;Bad&quot;) / as.integer(all_work_life_bal)), good = percent(count(work_life_balance == &quot;Good&quot;)/ as.integer(all_work_life_bal)), better = percent(count(work_life_balance == &quot;Better&quot;)/ as.integer(all_work_life_bal)), best = percent(count(work_life_balance == &quot;Best&quot;)/ as.integer(all_work_life_bal)),.groups = &#39;drop&#39;) %&gt;%
+  
+  rename(&quot;Bad&quot;=bad,&quot;Good&quot;=good, &quot;Better&quot;=better, &quot;Best&quot;=best)
+#calculate the percent rates of different categories of work life balance
+
+work_life_bal</code></pre>
+<pre><code>## # A tibble: 1 x 4
+##   Bad   Good  Better Best 
+##   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;
+## 1 5%    23%   61%    10%</code></pre>
+<p>Job satisfaction seems evenly distributed with a higher concentration in terms of very high and high jointly comprising sixty-one percent of respondents, but also a significant twenty percent for both low and medium.However, work life balance shows a stark concentration of results near the center of the distribution with over eighty percent of respondents claiming good or better, with some outliers on both tails in terms of bad and best.</p>
+<ol start="4" style="list-style-type: decimal">
+<li>Is there any relationship between monthly income and education? Monthly income and gender?</li>
+</ol>
+<pre class="r"><code>ggplot(hr_cleaned, aes(x = monthly_income, colour = education)) + 
+  
+  geom_density() + 
+  
+  labs(title = &quot;Relationship between monthly income and education&quot;, y = &quot;Density&quot;,  x = &quot;Monthly income&quot;)</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-6-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the density plot of monthly income for different education levels
+
+ggplot(hr_cleaned, aes(x = monthly_income, y = reorder(education, monthly_income))) + 
+
+  geom_boxplot() + 
+  
+  labs(title = &quot;Relationship between monthly income and education&quot;, y = &quot;Education&quot;, x = &quot;Monthly income&quot;)</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-6-2.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the boxplot of monthly income for different education levels
+
+ggplot(hr_cleaned, aes(x = monthly_income, colour = gender)) + 
+
+  geom_density() + 
+  
+  labs(title = &quot;Relationship between monthly income and gender&quot;,  y = &quot;Density&quot;,  x = &quot;Monthly income&quot;)</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-6-3.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the density plot of monthly income for male and female
+
+ggplot(hr_cleaned, aes(x = monthly_income, y = reorder(gender, monthly_income))) +
+  
+  geom_boxplot() + 
+  
+  labs(title = &quot;Relationship between monthly income and gender&quot;, y = &quot;Gender&quot;, x = &quot;Monthly income&quot;)</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-6-4.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the boxplot of monthly income for male and female</code></pre>
+<p>Education: There is a trend that higher education level would indicate the higher income.Employees with below college education earn on average the least at 3000 per month, with only very few earning more than 6875 per month.The highest earning employees have a doctors degree with the mean about 6250 per month and a second noticeable amount of employees averaging 16250 per month.</p>
+<p>Gender: The graph shows a fairly similar distribution of genders at the same income level,albeit with some variations, and the majority earns in the region of 3000, with the distribution of higher earners decreasing as the monthly income level rises, in line with one’s expectations. From the density plot, the average female monthly income is a little bit higher than that of the male employees.</p>
+<ol start="5" style="list-style-type: decimal">
+<li>Plot a boxplot of income vs job role. Make sure the highest-paid job roles appear first</li>
+</ol>
+<pre class="r"><code>ggplot(hr_cleaned, aes(x = monthly_income, y = reorder(job_role, monthly_income))) +
+  
+  geom_boxplot() + 
+  
+  labs(title = &quot;Relationship between monthly income and job role&quot;, y = &quot;Job role&quot;, x = &quot;Monthly income&quot;)</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-7-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the boxplot of monthly income for different job roles</code></pre>
+<p>From the boxplot, there is a trend that the higher level of job role would indicate the higher monthly income. It is reasonable because employees with higher-level job roles usually have more experiences or expertise which could create value for the company, as the reward, the monthly income would be higher. In addition, the average monthly incomes of sales representative, laboratory technician, research scientist and human resources are almost the same. These job roles are considered as the entry level of the company. The average monthly incomes of sales executive, manufacturing director and healthcare representative are almost the same. These job roles are considered as the middle level of the company and there are significant increases of monthly income compared with that of the entry level. The highest average monthly income belongs to manager and the second highest is research director. A income gap exists between these two job roles with the other job roles.</p>
+<ol start="6" style="list-style-type: decimal">
+<li>Calculate and plot a bar chart of the mean (or median?) income by education level.</li>
+</ol>
+<pre class="r"><code>hr_cleaned %&gt;% 
+  
+  group_by(education) %&gt;% 
+  
+  summarise(mean_income = mean(monthly_income),.groups = &#39;drop&#39;) %&gt;% 
+  
+  ggplot(aes(y = reorder(education, mean_income),x = mean_income)) + 
+  
+  geom_col(width=0.3) + 
+  
+  labs(title = &quot;Mean Income by education level&quot;, y = &quot;Education Level&quot;, x = &quot;Monthly income&quot;) </code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-8-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#group hr_cleaned by education, calculate the mean value of income and draw the plot with x-axe is the mean value of income and y-axe is the education level
+
+hr_cleaned %&gt;% 
+  
+  group_by(education) %&gt;% 
+  
+  summarise(med_income = median(monthly_income),.groups = &#39;drop&#39;) %&gt;% 
+  
+  ggplot(aes(y = reorder(education, med_income),x = med_income)) + 
+  
+  geom_col(width=0.3) + 
+  
+  labs(title = &quot;Median Income by education level&quot;, y = &quot;Education Level&quot;, x = &quot;Monthly income&quot;) #group hr_cleaned by education, calculate the median value of income and draw the plot with x-axe is the median value of income and y-axe is the education level</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-8-2.png" width="648" style="display: block; margin: auto;" /></p>
+<p>From both plots, it all indicates that higher educational level would result in the higher monthly income, not matter the mean value or the median value. It could be explained that employees with higher educational level would be more knowledgeable and professional. They could solve the problems of the company with the use of expertise and bring in profits. Therefore, they could get paid better.</p>
+<ol start="7" style="list-style-type: decimal">
+<li>Plot the distribution of income by education level. Use a facet_wrap and a theme from <code>ggthemes</code></li>
+</ol>
+<pre class="r"><code>hr_cleaned %&gt;% 
+  
+  ggplot(aes(x = monthly_income)) + 
+  
+  geom_density() + 
+  
+  facet_wrap(~ education) + 
+  
+  theme_igray() + 
+  
+  labs(title = &quot;Distribution of income by education level&quot;, y = &quot;Density&quot;, x = &quot;Education level&quot;)</code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-9-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the density plot of income by the education level</code></pre>
+<p>From these density plots, all indicate the right skewness. None of these plots are normally distributed. For the level of below college, it is least evenly distributed and the majority of income is below 5000. As the increase of education level, the income is more evenly distributed.It might be explained that employees with higher educational would have more stable income.</p>
+<ol start="8" style="list-style-type: decimal">
+<li>Plot income vs age, faceted by <code>job_role</code></li>
+</ol>
+<pre class="r"><code>hr_cleaned %&gt;% 
+  
+  ggplot(aes(y = monthly_income, x=age)) +
+  
+  geom_point()+ 
+  
+  facet_wrap(~job_role) + 
+  
+  labs(title = &quot;Income by age&quot;, x = &quot;Age&quot;, y = &quot;Monthly income&quot;) </code></pre>
+<p><img src="/blogs/blog6_files/figure-html/unnamed-chunk-10-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the plot with x_axe is age and y-axe is monthly income</code></pre>
+<p>According to the plots, it is roughly indicates that as age increases, income would increase. However, for different job roles, the speed of increase in income is not the same. For healthcare representative and sales executive, as age increases, the income increases relatively rapidly.Also, human resources have enough increase space. For manager and research director job roles, the increase pattern is obvious while for laboratory technician, research scientist and sales representative job roles, the increase of income is not very obvious as the age incomes. As a result, the decisive factor of income increase might be more correlated with the job funcation of this role rather than the age solely.</p>
+<blockquote>
+<p>Summary</p>
+</blockquote>
+<blockquote>
+<p>1.There is a 19.2% attrition rate for IBM. Compared to the technology average of around 13%, this is high.
+2.I roughly guess variable age is closer to Normal by looking at summary statistics. Age density plot indicates a roughly normal distribution with the mean value of about 34 years old. Years_at_company density plot shows a right skewed distribution with a lot of new employees at IBM. Most have been at IBM for less than 10 years. This also explains the high attrition rate, with only few employees staying in the long run. Monthly income density plot also shows a right skewed distribution. Most employees are paid close to 3000 per month, which only few having monthly salaries of over 7500.It might be another indicator of high attrition rate. From the Years since last promotion density plot, IBM shows good career progression opportunities with the mean of years since last promotion being close to 1.
+3.Job satisfaction seems evenly distributed with a higher concentration in terms of very high and high jointly comprising sixty-one percent of respondents, but also a significant twenty percent for both low and medium.However, work life balance shows a stark concentration of results near the center of the distribution with over eighty percent of respondents claiming good or better, with some outliers on both tails in terms of bad and best.
+4.Education: There is a trend that higher education level would indicate the higher income.Employees with below college education earn on average the least at 3000 per month, with only very few earning more than 6875 per month.The highest earning employees have a doctors degree with the mean about 6250 per month and a second noticeable amount of employees averaging 16250 per month.
+Gender: The graph shows a fairly similar distribution of genders at the same income level,albeit with some variations, and the majority earns in the region of 3000, with the distribution of higher earners decreasing as the monthly income level rises, in line with one’s expectations. From the density plot, the average female monthly income is a little bit higher than that of the male employees.
+5.From the boxplot, there is a trend that the higher level of job role would indicate the higher monthly income. It is reasonable because employees with higher-level job roles usually have more experiences or expertise which could create value for the company, as the reward, the monthly income would be higher. In addition, the average monthly incomes of sales representative, laboratory technician, research scientist and human resources are almost the same. These job roles are considered as the entry level of the company. The average monthly incomes of sales executive, manufacturing director and healthcare representative are almost the same. These job roles are considered as the middle level of the company and there are significant increases of monthly income compared with that of the entry level. The highest average monthly income belongs to manager and the second highest is research director. A income gap exists between these two job roles with the other job roles.
+6.From both plots, it all indicates that higher educational level would result in the higher monthly income, not matter the mean value or the median value. It could be explained that employees with higher educational level would be more knowledgeable and professional. They could solve the problems of the company with the use of expertise and bring in profits. Therefore, they could get paid better.
+7.From these density plots, all indicate the right skewness. None of these plots are normally distributed. For the level of below college, it is least evenly distributed and the majority of income is below 5000. As the increase of education level, the income is more evenly distributed.It might be explained that employees with higher educational would have more stable income.
+8.According to the plots, it is roughly indicates that as age increases, income would increase. However, for different job roles, the speed of increase in income is not the same. For healthcare representative and sales executive, as age increases, the income increases relatively rapidly.Also, human resources have enough increase space. For manager and research director job roles, the increase pattern is obvious while for laboratory technician, research scientist and sales representative job roles, the increase of income is not very obvious as the age incomes. As a result, the decisive factor of income increase might be more correlated with the job funcation of this role rather than the age solely.</p>
+</blockquote>
