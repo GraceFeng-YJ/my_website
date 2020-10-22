@@ -1,0 +1,142 @@
+---
+categories:
+- ""
+- ""
+date: "2020-10-20"
+description: Is the riskier stock expected to have higher return? 
+draft: false
+image: pic11.jpg
+keywords: ""
+slug: blog5
+title: Returns of financial stocks
+---
+
+
+
+<pre class="r"><code>nyse &lt;- read_csv(here::here(&quot;data&quot;,&quot;nyse.csv&quot;))#import the data set and name it nyse</code></pre>
+<p>-Based on this dataset, create a table and a bar plot that shows the number of companies per sector, in descending order</p>
+<pre class="r"><code>sectors&lt;-nyse%&gt;%group_by(sector)%&gt;%count(sort=TRUE)
+#group nyse by sector and count the numbers of companies for each sector in descending order
+sectors</code></pre>
+<pre><code>## # A tibble: 12 x 2
+## # Groups:   sector [12]
+##    sector                    n
+##    &lt;chr&gt;                 &lt;int&gt;
+##  1 Finance                  97
+##  2 Consumer Services        79
+##  3 Public Utilities         60
+##  4 Capital Goods            45
+##  5 Health Care              45
+##  6 Energy                   42
+##  7 Technology               40
+##  8 Basic Industries         39
+##  9 Consumer Non-Durables    31
+## 10 Miscellaneous            12
+## 11 Transportation           10
+## 12 Consumer Durables         8</code></pre>
+<pre class="r"><code>ggplot(sectors, aes(y = reorder(sector,n), x = n)) + 
+  
+  geom_col()+labs(title = &quot;Number of companies per sector&quot;, y = &quot;Sector&quot;,  x = &quot;Number of companies&quot;)</code></pre>
+<p><img src="public/blogs/blog5_files/figure-html/companies_per_sector-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the bar plot with x-axe is the number of companies, y-axe is the sector name in descending order</code></pre>
+<pre class="r"><code># Notice the cache=TRUE argument in the chunk options. Because getting data is time consuming, # cache=TRUE means that once it downloads data, the chunk will not run again next time you knit your Rmd
+myStocks&lt;-read_csv(here::here(&quot;data&quot;, &quot;myStocks.csv&quot;))#import the data set and name it myStocks.I import data because I could not run the code that the professor provides. Even though with the use of VPN, it still doesn&#39;t work.
+glimpse(myStocks)#see the variables of myStocks</code></pre>
+<pre><code>## Rows: 153,121
+## Columns: 8
+## $ symbol   &lt;chr&gt; &quot;MMM&quot;, &quot;MMM&quot;, &quot;MMM&quot;, &quot;MMM&quot;, &quot;MMM&quot;, &quot;MMM&quot;, &quot;MMM&quot;, &quot;MMM&quot;, &quot;MMM…
+## $ date     &lt;date&gt; 2000-01-03, 2000-01-04, 2000-01-05, 2000-01-06, 2000-01-07,…
+## $ open     &lt;dbl&gt; 48.0, 46.4, 45.6, 47.2, 50.6, 50.2, 50.4, 51.0, 50.7, 50.4, …
+## $ high     &lt;dbl&gt; 48.2, 47.4, 48.1, 51.2, 51.9, 51.8, 51.2, 51.8, 50.9, 50.5, …
+## $ low      &lt;dbl&gt; 47.0, 45.3, 45.6, 47.2, 50.0, 50.0, 50.2, 50.4, 50.2, 49.5, …
+## $ close    &lt;dbl&gt; 47.2, 45.3, 46.6, 50.4, 51.4, 51.1, 50.2, 50.4, 50.4, 49.7, …
+## $ volume   &lt;dbl&gt; 2173400, 2713800, 3699400, 5975800, 4101200, 3863800, 235760…
+## $ adjusted &lt;dbl&gt; 28.1, 26.9, 27.7, 30.0, 30.5, 30.4, 29.9, 30.0, 30.0, 29.5, …</code></pre>
+<pre class="r"><code>#calculate daily returns
+myStocks_returns_daily &lt;- myStocks %&gt;%
+  
+  group_by(symbol) %&gt;%
+  
+  tq_transmute(select     = adjusted, 
+               mutate_fun = periodReturn, 
+               period     = &quot;daily&quot;, 
+               type       = &quot;log&quot;,
+               col_rename = &quot;daily_returns&quot;,
+               cols = c(nested.col))  
+
+#calculate monthly returns
+myStocks_returns_monthly &lt;- myStocks %&gt;%  
+  
+  group_by(symbol) %&gt;%
+  
+  tq_transmute(select     = adjusted, 
+               mutate_fun = periodReturn, 
+               period     = &quot;monthly&quot;, 
+               type       = &quot;arithmetic&quot;,
+               col_rename = &quot;monthly_returns&quot;,
+               cols = c(nested.col)) 
+
+#calculate yearly returns
+myStocks_returns_annual &lt;- myStocks %&gt;%
+  
+  group_by(symbol) %&gt;%
+  
+  tq_transmute(select     = adjusted, 
+               mutate_fun = periodReturn, 
+               period     = &quot;yearly&quot;, 
+               type       = &quot;arithmetic&quot;,
+               col_rename = &quot;yearly_returns&quot;,
+               cols = c(nested.col))</code></pre>
+<p>-Create a dataframe and assign it to a new object, where you summarise monthly returns since 2017-01-01 for each of the stocks and <code>SPY</code>; min, max, median, mean, SD.</p>
+<pre class="r"><code>monthly_return_2017&lt;-myStocks_returns_monthly%&gt;%
+  
+  filter(date&gt;= as.Date(&quot;2017-01-01&quot;))%&gt;%
+  
+  summarize(min_ret=min(monthly_returns),max_ret=max(monthly_returns),med_ret=median(monthly_returns),avg_ret=mean(monthly_returns),sd_ret=sd(monthly_returns),.groups = &#39;drop&#39;)
+#group myStocks_returns_monthly by symbol, extract the stocks after 2017-01-01, calculate min, max, median,mean and sd values of each stock
+monthly_return_2017</code></pre>
+<pre><code>## # A tibble: 31 x 6
+##    symbol min_ret max_ret  med_ret   avg_ret sd_ret
+##    &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;
+##  1 AAPL    -0.181  0.200   0.0513   0.0387   0.0873
+##  2 AMGN    -0.104  0.180   0.0235   0.0171   0.0664
+##  3 AXP     -0.221  0.0988  0.0150   0.0109   0.0639
+##  4 BA      -0.458  0.257   0.0250   0.0124   0.120 
+##  5 CAT     -0.199  0.138   0.0318   0.0151   0.0742
+##  6 CRM     -0.155  0.391   0.0403   0.0350   0.0850
+##  7 CSCO    -0.155  0.130   0.0185   0.0125   0.0673
+##  8 CVX     -0.224  0.270   0.00173 -0.000926 0.0748
+##  9 DIS     -0.179  0.234  -0.00208  0.00967  0.0750
+## 10 DOW     -0.276  0.255   0.0456   0.00898  0.128 
+## # … with 21 more rows</code></pre>
+<p>-Plot a density plot, using <code>geom_density()</code>, for each of the stocks</p>
+<pre class="r"><code>ggplot(myStocks_returns_monthly,aes(x=monthly_returns))+
+  
+  geom_density()+
+  
+  facet_wrap(~symbol)+
+  
+  labs(title = &quot;Density plot per stock of monthly returns&quot;, y = &quot;Density&quot;,  x = &quot;Monthly returns&quot;)</code></pre>
+<p><img src="public/blogs/blog5_files/figure-html/density_monthly_returns-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the density plot with x-axe is monthly_return for each stock</code></pre>
+<blockquote>
+<p>SPY is the least risky stock. Dow is the most risky stock. This can be determined by looking at the width of the density plots. The wider, the greater the standard deviation and therefore the riskier (and vice versa).</p>
+</blockquote>
+<p>-Finally, produce a plot that shows the expected monthly return (mean) of a stock on the Y axis and the risk (standard deviation) in the X-axis. Please use <code>ggrepel::geom_text_repel()</code> to label each stock with its ticker symbol</p>
+<pre class="r"><code>library(ggrepel)
+monthly_return&lt;-myStocks_returns_monthly%&gt;%
+  
+  summarize(avg_ret=mean(monthly_returns),sd_ret=sd(monthly_returns), .groups = &#39;drop&#39;)
+#get the data frame of monthly_return by group myStocks_returns_monthly with symbol and calculate mean and sd of monthly return for each stock
+ggplot(monthly_return,aes(y=avg_ret,x=sd_ret,label=symbol))+
+  
+  geom_point()+
+  
+  geom_text_repel()+
+  
+  labs(title = &quot;Expected monthly return of a stock relative to its risk measured by standard deviation&quot;, y = &quot;Expected monthly return&quot;,  x = &quot;Risk&quot;)</code></pre>
+<p><img src="public/blogs/blog5_files/figure-html/risk_return_plot-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#draw the plot with x-axe is the risk, y-axe is the expected monthly return</code></pre>
+<blockquote>
+<p>There is trend that the risker one stock is, the higher the expected monthly return is. However, the DOW is the most risky stock yet does not have high returns to justify the risk. V,UNK and NKE are stocks with good returns to relative low risk profile.</p>
+</blockquote>

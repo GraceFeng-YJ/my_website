@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<html>
+
+    <head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<meta name="description" content="This is my personal website. Nice to meet you!">
+	<meta name="author" content="Grace Feng">
+	<meta name="generator" content="Hugo 0.76.5" />
+	<title>Capital Asset Pricing Model (CAPM) &middot; Portfolio website for Grace Feng</title>
+	<!-- Stylesheets -->
+	
+	<link rel="stylesheet" href="css/main.css"/>
+	
+	
+
+	
+
+	<!-- Custom Fonts -->
+	<link href="css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+	
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+	<link rel="icon" type="image/x-icon" href="favicon.ico">
+	
+
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="js/ie/html5shiv.js"></script>
+	<script src="js/ie/html5shiv.jsrespond.min.js"></script>
+	<![endif]-->
+</head>
+
+    <body>
+
+    <!-- Wrapper -->
+        <div id="wrapper">
+
+            <!-- Header -->
+    <header id="header" class="alt">
+        <a href="" class="logo"><strong>Grace</strong> <span>Porfolio website</span></a>
+        <nav>
+            <a href="#menu">Menu</a>
+        </nav>
+    </header>
+
+<!-- Menu -->
+    <nav id="menu">
+        <ul class="links">
+            
+                <li><a href="">Home</a></li>
+            
+                <li><a href="blogs">Blogs</a></li>
+            
+
+        </ul>
+        <ul class="actions vertical">
+            
+                <li><a href="blogs" class="button special fit">My projects</a></li>
+            
+            
+        </ul>
+    </nav>
+
+        <!-- Main -->
+            <div id="main" class="alt">
+
+                
+                    <section id="one">
+                        <div class="inner">
+                            <header class="major">
+                                <h1>Capital Asset Pricing Model (CAPM)</h1>
+                            </header>
+                            
+                                <span class="image main"><img src="/img/blogs/pic13.jpg" alt="" /></span>
+                            
+                            
+
+
+<div id="loading-the-data" class="section level2">
+<h2>Loading the data</h2>
+<pre class="r"><code>myStocks &lt;- c(&quot;AAPL&quot;,&quot;JPM&quot;,&quot;DIS&quot;,&quot;DPZ&quot;,&quot;ANF&quot;,&quot;SPY&quot; ) %&gt;%
+  
+  tq_get(get  = &quot;stock.prices&quot;,
+         from = &quot;2017-08-01&quot;,
+         to   = &quot;2020-09-30&quot;) %&gt;%
+  
+  group_by(symbol) 
+
+str(myStocks) # examine the structure of the resulting data frame</code></pre>
+<pre><code>## tibble [4,782 × 8] (S3: grouped_df/tbl_df/tbl/data.frame)
+##  $ symbol  : chr [1:4782] &quot;AAPL&quot; &quot;AAPL&quot; &quot;AAPL&quot; &quot;AAPL&quot; ...
+##  $ date    : Date[1:4782], format: &quot;2017-08-01&quot; &quot;2017-08-02&quot; ...
+##  $ open    : num [1:4782] 37.3 39.8 39.3 39 39.3 ...
+##  $ high    : num [1:4782] 37.6 39.9 39.3 39.3 39.7 ...
+##  $ low     : num [1:4782] 37.1 39 38.8 38.9 39.2 ...
+##  $ close   : num [1:4782] 37.5 39.3 38.9 39.1 39.7 ...
+##  $ volume  : num [1:4782] 141474400 279747200 108389200 82239600 87481200 ...
+##  $ adjusted: num [1:4782] 35.9 37.6 37.2 37.4 38 ...
+##  - attr(*, &quot;groups&quot;)= tibble [6 × 2] (S3: tbl_df/tbl/data.frame)
+##   ..$ symbol: chr [1:6] &quot;AAPL&quot; &quot;ANF&quot; &quot;DIS&quot; &quot;DPZ&quot; ...
+##   ..$ .rows : list&lt;int&gt; [1:6] 
+##   .. ..$ : int [1:797] 1 2 3 4 5 6 7 8 9 10 ...
+##   .. ..$ : int [1:797] 3189 3190 3191 3192 3193 3194 3195 3196 3197 3198 ...
+##   .. ..$ : int [1:797] 1595 1596 1597 1598 1599 1600 1601 1602 1603 1604 ...
+##   .. ..$ : int [1:797] 2392 2393 2394 2395 2396 2397 2398 2399 2400 2401 ...
+##   .. ..$ : int [1:797] 798 799 800 801 802 803 804 805 806 807 ...
+##   .. ..$ : int [1:797] 3986 3987 3988 3989 3990 3991 3992 3993 3994 3995 ...
+##   .. ..@ ptype: int(0) 
+##   ..- attr(*, &quot;.drop&quot;)= logi TRUE</code></pre>
+<p>For each ticker symbol, the data frame contains its <code>symbol</code>, the <code>date</code>, the prices for <code>open</code>,<code>high</code>, <code>low</code> and <code>close</code>, and the <code>volume</code>, or how many stocks were traded on that day. More importantly, the data frame contains the <code>adjusted</code> closing price, which adjusts for any stock splits and/or dividends paid and this is what we will be using for our analyses.</p>
+<p>Towards the end, you a see a line <code>- attr(*, "group_sizes")= int  1761 1761 1761 1761 1761 1761 1761 1761</code>.
+Since we grouped our data by its ticker symbol, you can see that over the course of 7 years (2011-2017) we have 1761 trading days, or roughly 250 trading days per year.</p>
+<p>Financial performance and CAPM analysis depend on <strong>returns</strong> and not on <strong>adjusted closing prices</strong>. So given the adjusted closing prices, our firststep is to calculate daily and monthly returns.</p>
+<p>For yearly and monthly data, we assume discrete changes, so we the formula used to calculate the return for month <strong>(t+1)</strong> is</p>
+<p><span class="math inline">\(Return(t+1)= \frac{Adj.Close(t+1)}{Adj.Close (t)}-1\)</span></p>
+<p>For daily data we use log returns, or <span class="math inline">\(Return(t+1)= LN\frac{Adj.Close(t+1)}{Adj.Close (t)}\)</span></p>
+<p>The reason we use log returns are:</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Compound interest interpretation; namely, that the log return can be interpreted as the continuously (rather than discretely) compounded rate of return</p></li>
+<li><p>Log returns are assumed to follow a normal distribution</p></li>
+<li><p>Log return over n periods is the sum of n log returns</p></li>
+</ol>
+<p>We may want to see what our investments would have grown to, of we had invested $1000 in each of the assets on Aug 1, 2017.</p>
+<p><img src="/blogs/blog7_files/figure-html/wealth_index-1.png" width="648" style="display: block; margin: auto;" /></p>
+</div>
+<div id="scatterplots-of-individual-stocks-returns-versus-sp500-index-returns." class="section level2">
+<h2>Scatterplots of individual stocks returns versus S&amp;P500 Index returns.</h2>
+<p>Besides these exploratory graphs of returns and price evolution, we also need to create scatterplots among the returns of different stocks. <code>ggpairs</code> crates a scattterplot matrix that shows the distribution of returns for each stock, and a matrix of scatter plots and correlations. This may take a while to run, but look at the last row, the last column and along the diagonal.</p>
+<p><img src="/blogs/blog7_files/figure-html/correlationMatrix-1.png" width="648" style="display: block; margin: auto;" /></p>
+<p>The next step is to fit a liner regression model to calculate the <span class="math inline">\(\beta\)</span> of AAPL. After fitting the model, we produce a summary table for the regression model, a 95% confidence interval for the coefficients, and an ANOVA table that shows the split of variability (<code>Sum Sq</code>) of AAPL returns and what portion ix explained by the market (<code>SPY</code>) versus the unexplained residuals.</p>
+<p>Besides fitting the model, we should also have a look at the residuals. Do they seem to follow a Normal Distribution? Is there a pattern in the residuals, or do they appear to be ‘random’? Is the variance of the residuals constant or does it seem to increase with increasing values of X?</p>
+<p>First, we plot the residuals vs. the fitted (or predicted) values. This is a standard regression diagnostic plot to check whether there is no pattern in the residuals, as well as to test for heteroscedasticity, or whether the residuals appear to have unequal, non-constant variance.</p>
+<p>The second thing we must check is whether the residuals follow a Normal distribution. A normal scores, or a QQ plot, allows us to check for skewness, kurtosis and outliers.</p>
+<p><img src="/blogs/blog7_files/figure-html/AAPL_CAPM-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre><code>##             Estimate Std. Error t value  Pr(&gt;|t|)    
+## (Intercept)   0.0217     0.0121    1.79     0.082 .  
+## SPY           1.2799     0.2409    5.31 0.0000058 ***
+## 
+## Residual standard error: 0.073 on 36 degrees of freedom
+## Multiple R-squared:  0.439,  Adjusted R-squared:  0.424 
+## F-statistic: 28.2 on 1 and 36 DF,  p-value: 0.00000576</code></pre>
+<pre><code>## # A tibble: 2 x 7
+##   term        estimate std.error statistic    p.value conf.low conf.high
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)   0.0217    0.0121      1.79 0.0816     -0.00287    0.0463
+## 2 SPY           1.28      0.241       5.31 0.00000576  0.791      1.77</code></pre>
+<pre><code>## # A tibble: 1 x 12
+##   r.squared adj.r.squared  sigma statistic p.value    df logLik   AIC   BIC
+##       &lt;dbl&gt;         &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1     0.439         0.424 0.0730      28.2 5.76e-6     1   46.6 -87.2 -82.3
+## # … with 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</code></pre>
+<p><img src="/blogs/blog7_files/figure-html/AAPL_CAPM-2.png" width="648" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>From the result of regession, we could see the beta of APPL is 1.27993 and the adjusted R-squared is 0.4239.
+For the residuals vs fitted plot, residuals are random, with no pattern, and around Y = 0. For the Normal Q-Q plot, deviations from a straight line indicate that residuals follows a Normal distribution.</p>
+</blockquote>
+</div>
+
+                        </div>
+                    </section>
+            <!-- Disqus Inject -->
+                
+            </div>
+            
+        <!-- Footer -->
+            
+                <!-- Footer -->
+    <footer id="footer">
+        <div class="inner">
+            <ul class="icons">
+                
+                    <li><a href="https://www.facebook.com/yajie.feng.5" class="icon alt fa-facebook" target="_blank"><span class="label">Facebook</span></a></li>
+                
+                    <li><a href="https://www.instagram.com/grace.f_28/" class="icon alt fa-instagram" target="_blank"><span class="label">Instagram</span></a></li>
+                
+                    <li><a href="https://github.com/GraceFeng-YJ" class="icon alt fa-github" target="_blank"><span class="label">GitHub</span></a></li>
+                
+                    <li><a href="https://www.linkedin.com/in/yajie-grace-feng-01911014a/" class="icon alt fa-linkedin" target="_blank"><span class="label">LinkedIn</span></a></li>
+                
+            </ul>
+            <ul class="copyright">
+                <li>&copy; </li>
+                
+            </ul>
+        </div>
+    </footer>
+
+            
+        </div>
+
+    <!-- Scripts -->
+        <!-- Scripts -->
+    <!-- jQuery -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery.scrolly.min.js"></script>
+    <script src="js/jquery.scrollex.min.js"></script>
+    <script src="js/skel.min.js"></script>
+    <script src="js/util.js"></script>
+
+    
+
+    <!-- Main JS -->
+    <script src="js/main.js"></script>
+
+    
+
+    
+
+    </body>
+</html>

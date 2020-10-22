@@ -1,0 +1,367 @@
+<!DOCTYPE HTML>
+<html>
+
+    <head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<meta name="description" content="This is my personal website. Nice to meet you!">
+	<meta name="author" content="Grace Feng">
+	<meta name="generator" content="Hugo 0.76.5" />
+	<title>Bond yields and consumer sentiment &middot; Portfolio website for Grace Feng</title>
+	<!-- Stylesheets -->
+	
+	<link rel="stylesheet" href="css/main.css"/>
+	
+	
+
+	
+
+	<!-- Custom Fonts -->
+	<link href="css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+	
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+	<link rel="icon" type="image/x-icon" href="favicon.ico">
+	
+
+	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+	<script src="js/ie/html5shiv.js"></script>
+	<script src="js/ie/html5shiv.jsrespond.min.js"></script>
+	<![endif]-->
+</head>
+
+    <body>
+
+    <!-- Wrapper -->
+        <div id="wrapper">
+
+            <!-- Header -->
+    <header id="header" class="alt">
+        <a href="" class="logo"><strong>Grace</strong> <span>Porfolio website</span></a>
+        <nav>
+            <a href="#menu">Menu</a>
+        </nav>
+    </header>
+
+<!-- Menu -->
+    <nav id="menu">
+        <ul class="links">
+            
+                <li><a href="">Home</a></li>
+            
+                <li><a href="blogs">Blogs</a></li>
+            
+
+        </ul>
+        <ul class="actions vertical">
+            
+                <li><a href="blogs" class="button special fit">My projects</a></li>
+            
+            
+        </ul>
+    </nav>
+
+        <!-- Main -->
+            <div id="main" class="alt">
+
+                
+                    <section id="one">
+                        <div class="inner">
+                            <header class="major">
+                                <h1>Bond yields and consumer sentiment</h1>
+                            </header>
+                            
+                                <span class="image main"><img src="/img/blogs/pic14.jpg" alt="" /></span>
+                            
+                            
+
+
+<pre class="r"><code>data&lt;- read_csv(here::here(&quot;data&quot;, &quot;cleaned_with_binary.csv&quot;))#import the date set
+glimpse(data)#see the variables of he_dataset</code></pre>
+<pre><code>## Rows: 115
+## Columns: 11
+## $ X1            &lt;dbl&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, …
+## $ PF_Current    &lt;dbl&gt; 77, 75, 77, 76, 77, 82, 74, 82, 82, 78, 81, 80, 85, 91,…
+## $ PF_Expected   &lt;dbl&gt; 110, 109, 112, 108, 110, 116, 109, 107, 108, 110, 109, …
+## $ BC_12months   &lt;dbl&gt; 84, 80, 78, 80, 83, 79, 66, 69, 61, 67, 71, 79, 87, 85,…
+## $ BC_5years     &lt;dbl&gt; 86, 84, 82, 77, 82, 84, 73, 75, 73, 70, 78, 78, 80, 87,…
+## $ BuyConditions &lt;dbl&gt; 133, 136, 136, 132, 132, 139, 123, 120, 123, 119, 131, …
+## $ Curr_Index    &lt;dbl&gt; 81.1, 81.8, 82.4, 81.0, 81.0, 85.6, 76.5, 78.3, 79.6, 7…
+## $ Exp_Index     &lt;dbl&gt; 70.1, 68.4, 67.9, 66.5, 68.8, 69.8, 62.3, 62.9, 60.9, 6…
+## $ Date          &lt;dbl&gt; 201001, 201002, 201003, 201004, 201005, 201006, 201007,…
+## $ DGS           &lt;dbl&gt; 3.73, 3.69, 3.73, 3.84, 3.40, 3.20, 3.01, 2.68, 2.65, 2…
+## $ DGS_binary    &lt;dbl&gt; 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0…</code></pre>
+<pre class="r"><code>attach(data)</code></pre>
+<p>#Split data</p>
+<pre class="r"><code>DGS_binary&lt;-as.factor(data$DGS_binary)
+
+set.seed(100) # change to same value as before
+
+sample.data&lt;-sample.int(nrow(data), floor(.50*nrow(data)), replace = F)
+
+train&lt;- data[sample.data, ]
+
+test &lt;- data[-sample.data, ]
+
+pred.test&lt;-test[,&quot;DGS_binary&quot;]</code></pre>
+<p>#Recursive Binary Splitting</p>
+<pre class="r"><code>library(tree)  ##to fit trees
+
+##Use recursive binary splitting on training data
+tree.class.train &lt;- tree(factor(DGS_binary) ~ PF_Current + PF_Expected + BC_12months + BC_5years + BuyConditions, data=train)
+
+summary(tree.class.train)</code></pre>
+<pre><code>## 
+## Classification tree:
+## tree(formula = factor(DGS_binary) ~ PF_Current + PF_Expected + 
+##     BC_12months + BC_5years + BuyConditions, data = train)
+## Variables actually used in tree construction:
+## [1] &quot;BuyConditions&quot; &quot;PF_Current&quot;    &quot;BC_5years&quot;     &quot;PF_Expected&quot;  
+## Number of terminal nodes:  8 
+## Residual mean deviance:  0.513 = 25.1 / 49 
+## Misclassification error rate: 0.123 = 7 / 57</code></pre>
+<pre class="r"><code>##plot tree
+plot(tree.class.train)
+
+text(tree.class.train, cex=0.75, pretty=0)</code></pre>
+<p><img src="/blogs/blog8_files/figure-html/unnamed-chunk-3-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>##find predicted classes for test data
+tree.pred.test&lt;-predict(tree.class.train, newdata=test, type=&quot;class&quot;)
+
+##overall test error rate
+data1&lt;-cbind(tree.pred.test,pred.test)
+
+same_value&lt;-data1 %&gt;%
+  
+  filter(tree.pred.test==DGS_binary)%&gt;%
+  
+  count()
+
+1-same_value$n/length(tree.pred.test)</code></pre>
+<pre><code>## [1] 0.517</code></pre>
+<p>The use of these four variables (BuyConditions, PF_Current, PF_Expected, and BC_5years) can in fact be used to create a decision tree that leads to the classification of bond yield increases and decreases. For example, if the buying conditions sentiment is below 131, then the bond yield is more likely to decrease, signified by a binary response of 0. However, if the buying conditions sentiment is above 131, the personal finance sentiment is less than 119.5, and the business conditions in 5 years sentiment is less than 79.5, then the bond yield is more likely to increase, signified with a binary response of 1.</p>
+<p>#Prune tree</p>
+<pre class="r"><code>##use CV
+RNGkind(sample.kind = &quot;Rejection&quot;)
+
+set.seed(100)
+
+cv.class&lt;-cv.tree(tree.class.train, K=10, FUN=prune.misclass) ##FUN=prune.misclass so error rate is used to guide CV and pruning, rather than the deviance which is the default (and should not be used in classification).
+
+cv.class</code></pre>
+<pre><code>## $size
+## [1] 8 5 3 1
+## 
+## $dev
+## [1] 22 20 20 26
+## 
+## $k
+## [1] -Inf  1.0  1.5  5.0
+## 
+## $method
+## [1] &quot;misclass&quot;
+## 
+## attr(,&quot;class&quot;)
+## [1] &quot;prune&quot;         &quot;tree.sequence&quot;</code></pre>
+<pre class="r"><code>##size of tree chosen by pruning
+trees.num.class&lt;-cv.class$size[which.min(cv.class$dev)]
+
+trees.num.class ##5 terminal nodes. </code></pre>
+<pre><code>## [1] 5</code></pre>
+<pre class="r"><code>##fit tree with size chosen by pruning
+prune.class&lt;-prune.misclass(tree.class.train, best=trees.num.class)
+
+prune.class</code></pre>
+<pre><code>## node), split, n, deviance, yval, (yprob)
+##       * denotes terminal node
+## 
+##  1) root 57 80 0 ( 1 0 )  
+##    2) BuyConditions &lt; 131 9  0 0 ( 1 0 ) *
+##    3) BuyConditions &gt; 131 48 70 0 ( 1 0 )  
+##      6) PF_Current &lt; 119.5 28 40 1 ( 0 1 ) *
+##      7) PF_Current &gt; 119.5 20 20 0 ( 1 0 )  
+##       14) BC_5years &lt; 104.5 10  0 0 ( 1 0 ) *
+##       15) BC_5years &gt; 104.5 10 10 0 ( 1 0 )  
+##         30) BC_5years &lt; 108.5 5  5 1 ( 0 1 ) *
+##         31) BC_5years &gt; 108.5 5  0 0 ( 1 0 ) *</code></pre>
+<pre class="r"><code>summary(prune.class)</code></pre>
+<pre><code>## 
+## Classification tree:
+## snip.tree(tree = tree.class.train, nodes = 6L)
+## Variables actually used in tree construction:
+## [1] &quot;BuyConditions&quot; &quot;PF_Current&quot;    &quot;BC_5years&quot;    
+## Number of terminal nodes:  5 
+## Residual mean deviance:  0.772 = 40.2 / 52 
+## Misclassification error rate: 0.175 = 10 / 57</code></pre>
+<pre class="r"><code>##plot pruned tree
+plot(prune.class)
+text(prune.class, cex=0.75, pretty=0)</code></pre>
+<p><img src="/blogs/blog8_files/figure-html/unnamed-chunk-4-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>##prediction based on pruned tree for test data
+tree.pred.prune&lt;-predict(prune.class, newdata=test, type=&quot;class&quot;)
+##overall test error rate
+data2&lt;-cbind(tree.pred.prune,pred.test)
+
+same_value2&lt;-data2 %&gt;%
+  
+  filter(tree.pred.prune==DGS_binary)%&gt;%
+  
+  count()
+
+1-same_value2$n/length(tree.pred.prune)</code></pre>
+<pre><code>## [1] 0.534</code></pre>
+<p>We can know the predicted bond yield more succinctly based on the splits of our predictors. For instance, if the buying conditions sentiment is below 131, then the bond yield is more likely to decrease, signified by a binary response of 0. However, if the buying conditions sentiment is above 131, the personal finance sentiment is less than 119.5, then the bond yield is likely to increase, signified with a binary response of 1. Or the personal finance sentiment is larger than 119.5 with the business conditions in 5 years sentiment between 104.5 adn 108.5, then the bond yield is more likely to increase, signified with a binary response of 1.</p>
+<div id="bagging" class="section level1">
+<h1>Bagging</h1>
+<pre class="r"><code>library(&#39;randomForest&#39;)
+
+RNGkind(sample.kind = &quot;Rejection&quot;)
+
+set.seed(100)
+
+bag.class&lt;-randomForest(factor(DGS_binary)~ PF_Current + PF_Expected + BC_12months + BC_5years + 
+                          BuyConditions, data=train, mtry=5, importance=TRUE)
+
+bag.class</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = factor(DGS_binary) ~ PF_Current + PF_Expected +      BC_12months + BC_5years + BuyConditions, data = train, mtry = 5,      importance = TRUE) 
+##                Type of random forest: classification
+##                      Number of trees: 500
+## No. of variables tried at each split: 5
+## 
+##         OOB estimate of  error rate: 38.6%
+## Confusion matrix:
+##    0  1 class.error
+## 0 23 11       0.324
+## 1 11 12       0.478</code></pre>
+<pre class="r"><code>importance(bag.class)</code></pre>
+<pre><code>##                   0      1 MeanDecreaseAccuracy MeanDecreaseGini
+## PF_Current    -1.51 10.264                6.215             5.67
+## PF_Expected    1.36  0.031                0.849             3.25
+## BC_12months   -7.40  0.571               -5.495             3.41
+## BC_5years      1.24  5.818                5.117             5.53
+## BuyConditions 16.69 10.201               18.055             9.14</code></pre>
+<pre class="r"><code>##graphical version
+varImpPlot(bag.class)</code></pre>
+<p><img src="/blogs/blog8_files/figure-html/unnamed-chunk-5-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>##prediction based on bagging for test data
+pred.bag&lt;-predict(bag.class, newdata=test)
+
+##overall test error rate
+data3&lt;-cbind(pred.bag,pred.test)
+
+same_value3&lt;-data3 %&gt;%
+  
+  filter(pred.bag==DGS_binary)%&gt;%
+  
+  count()
+
+1-same_value3$n/length(pred.bag)</code></pre>
+<pre><code>## [1] 0.534</code></pre>
+<pre class="r"><code>##Random forests
+
+RNGkind(sample.kind = &quot;Rejection&quot;)
+
+set.seed(100)
+
+rf.class&lt;-randomForest(factor(DGS_binary)~ PF_Current + PF_Expected + BC_12months + BC_5years + BuyConditions, data=train, mtry=2,importance=TRUE)
+
+rf.class</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = factor(DGS_binary) ~ PF_Current + PF_Expected +      BC_12months + BC_5years + BuyConditions, data = train, mtry = 2,      importance = TRUE) 
+##                Type of random forest: classification
+##                      Number of trees: 500
+## No. of variables tried at each split: 2
+## 
+##         OOB estimate of  error rate: 33.3%
+## Confusion matrix:
+##    0  1 class.error
+## 0 25  9       0.265
+## 1 10 13       0.435</code></pre>
+<pre class="r"><code>importance(rf.class)</code></pre>
+<pre><code>##                    0     1 MeanDecreaseAccuracy MeanDecreaseGini
+## PF_Current     2.025  3.49                3.577             5.38
+## PF_Expected    3.772 -2.98                0.936             3.99
+## BC_12months   -1.542 -1.95               -2.833             4.84
+## BC_5years     -0.113  5.20                2.832             5.44
+## BuyConditions 14.346  5.36               14.247             7.34</code></pre>
+<pre class="r"><code>##graphical version
+varImpPlot(rf.class)</code></pre>
+<p><img src="/blogs/blog8_files/figure-html/unnamed-chunk-6-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>##prediction based on Random forests for test data
+pred.rf&lt;-predict(rf.class, newdata=test)
+
+##overall test error rate
+data4&lt;-cbind(pred.rf,pred.test)
+
+same_value4&lt;-data4 %&gt;%
+  
+  filter(pred.rf==DGS_binary)%&gt;%
+  
+  count()
+
+1-same_value4$n/length(pred.rf) </code></pre>
+<pre><code>## [1] 0.552</code></pre>
+<p>Bagging and random forest don’t seem to improve the performance of our model. Bagging has a test MSE of 0.5344828 and random forest has a test MSE of 0.5517241. For both bagging and random forest, BuyConditions is found to be the most important variable.</p>
+<blockquote>
+<p>In conclusion, consumer sentiment does not seem to be as capable of predicting whether bond yield will either increase or decrease as it is of predicting the bond yield value. When we used bagging and random forest, the test MSE’s did not decrease as it did for bond yield, so it seems that bond yield increase or decrease is harder to predict than the value itself, which is surprising. This was surprising because typically you would employ bagging and random forest methods in order to minimize variance, but this may be a result of overfitting to the noise within the data. All the test MSE’s for the classification decision trees hovered around low to mid 50%, and while that is not as bad as it could be, it is difficult to say that consumer sentiment significantly predicts whether bond yield will increase or decrease.</p>
+</blockquote>
+</div>
+
+                        </div>
+                    </section>
+            <!-- Disqus Inject -->
+                
+            </div>
+            
+        <!-- Footer -->
+            
+                <!-- Footer -->
+    <footer id="footer">
+        <div class="inner">
+            <ul class="icons">
+                
+                    <li><a href="https://www.facebook.com/yajie.feng.5" class="icon alt fa-facebook" target="_blank"><span class="label">Facebook</span></a></li>
+                
+                    <li><a href="https://www.instagram.com/grace.f_28/" class="icon alt fa-instagram" target="_blank"><span class="label">Instagram</span></a></li>
+                
+                    <li><a href="https://github.com/GraceFeng-YJ" class="icon alt fa-github" target="_blank"><span class="label">GitHub</span></a></li>
+                
+                    <li><a href="https://www.linkedin.com/in/yajie-grace-feng-01911014a/" class="icon alt fa-linkedin" target="_blank"><span class="label">LinkedIn</span></a></li>
+                
+            </ul>
+            <ul class="copyright">
+                <li>&copy; </li>
+                
+            </ul>
+        </div>
+    </footer>
+
+            
+        </div>
+
+    <!-- Scripts -->
+        <!-- Scripts -->
+    <!-- jQuery -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery.scrolly.min.js"></script>
+    <script src="js/jquery.scrollex.min.js"></script>
+    <script src="js/skel.min.js"></script>
+    <script src="js/util.js"></script>
+
+    
+
+    <!-- Main JS -->
+    <script src="js/main.js"></script>
+
+    
+
+    
+
+    </body>
+</html>
