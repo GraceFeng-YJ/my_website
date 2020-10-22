@@ -1,5 +1,5 @@
 [build] 
-  publish = "/Users/gracevon/Desktop/my_website/public"
+  publish = "public"
   command = "hugo"
 
 [build.environment]
