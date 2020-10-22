@@ -1,7 +1,7 @@
 ---
-title: "Beer, Wine and Spirits"
+title: "Bond yields and consumer sentiment"
 date: '2020-10-20'
-description: Where Do People Drink The Most Beer, Wine And Spirits?
+description: Can consumer sentiment be used to predict whether bond yields will increase or decrease?
 draft: no
 image: pic14.jpg
 keywords: ''
@@ -27,72 +27,192 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r, load_alcohol_data}
-library(fivethirtyeight)
-data(drinks)#import the data set of drinks
+```{r load-libraries, warning=FALSE, message=FALSE, echo=FALSE}
+library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
+library(mosaic)
+library(ggthemes)
+library(lubridate)
+library(here)
+library(skimr)
+library(janitor)
+library(vroom)
+library(tidyquant)
+library(rvest)    # scrape websites
+library(purrr)  
+library(lubridate) #to handle dates
+library(MASS)
+library(klaR)
+library(ICS)
+library(mvtnorm)
 ```
 
-What are the variable types? Any missing values we should worry about? 
-```{r glimpse_skim_data}
-library(dplyr)
-glimpse(drinks)#see the variables of this data set
-skim(drinks)#check out the variable types and missing values  
+
+```{r}
+data<- read_csv(here::here("data", "cleaned_with_binary.csv"))#import the date set
+glimpse(data)#see the variables of he_dataset
+attach(data)
 ```
 
-There are five variables: country, beer_servings,spirit_servings,wine_servings and total_litres_of_pure_alcohol. Country is categorical while the other four variables are numerical. There are no missing values we should worry about.
 
-Make a plot that shows the top 25 beer consuming countries
+#Split data
 
-```{r beer_plot}
-beer_plot<-drinks %>% 
-  
-  arrange(desc(beer_servings))%>%
-  
-  top_n(25)%>%
-  
-  select("country", "beer_servings") %>%
-  
-  ggplot(mapping=aes(y=reorder(country,beer_servings),x=beer_servings))+geom_col()+labs(title = "Top 25 beer consuming countries", y = "Country",  x = "Beer servings")
-#arrange drinks by descending order of beer_servings, choose the top 25 values and draw the plot of top 25 beer consuming countries.
+```{r}
+DGS_binary<-as.factor(data$DGS_binary)
 
-beer_plot
+set.seed(100) # change to same value as before
+
+sample.data<-sample.int(nrow(data), floor(.50*nrow(data)), replace = F)
+
+train<- data[sample.data, ]
+
+test <- data[-sample.data, ]
+
+pred.test<-test[,"DGS_binary"]
 ```
 
-Make a plot that shows the top 25 wine consuming countries
-```{r wine_plot}
-wine_plot<-drinks %>% 
-  
-  arrange(desc(wine_servings))%>%
-  
-  top_n(25)%>%
-  
-  select("country", "wine_servings") %>%
-  
-  ggplot(mapping=aes(y=reorder(country,wine_servings),x=wine_servings))+geom_col()+labs(title = "Top 25 wine consuming countries", y = "Country",  x = "Wine servings")
-#arrange drinks by descending order of wine_servings, choose the top 25 values and draw the plot of top 25 wine consuming countries.
+#Recursive Binary Splitting
 
-wine_plot
+```{r}
+
+library(tree)  ##to fit trees
+
+##Use recursive binary splitting on training data
+tree.class.train <- tree(factor(DGS_binary) ~ PF_Current + PF_Expected + BC_12months + BC_5years + BuyConditions, data=train)
+
+summary(tree.class.train)
+
+##plot tree
+plot(tree.class.train)
+
+text(tree.class.train, cex=0.75, pretty=0)
+
+##find predicted classes for test data
+tree.pred.test<-predict(tree.class.train, newdata=test, type="class")
+
+##overall test error rate
+data1<-cbind(tree.pred.test,pred.test)
+
+same_value<-data1 %>%
+  
+  filter(tree.pred.test==DGS_binary)%>%
+  
+  count()
+
+1-same_value$n/length(tree.pred.test)
 ```
 
-Finally, make a plot that shows the top 25 spirit consuming countries
-```{r spirit_plot}
-spirit_plot<-drinks %>% 
-  
-  arrange(desc(spirit_servings))%>%
-  
-  top_n(25)%>%
-  
-  select("country", "spirit_servings") %>%
-  
-  ggplot(mapping=aes(y=reorder(country,spirit_servings),x=spirit_servings))+geom_col()+labs(title = "Top 25 spirit consuming countries", y = "Country",  x = "Spirit servings")
-#arrange drinks by descending order of spirit_servings, choose the top 25 values and draw the plot of top 25 spirit consuming countries.
+The use of these four variables (BuyConditions, PF_Current, PF_Expected, and BC_5years) can in fact be used to create a decision tree that leads to the classification of bond yield increases and decreases. For example, if the buying conditions sentiment is below 131, then the bond yield is more likely to decrease, signified by a binary response of 0. However, if the buying conditions sentiment is above 131, the personal finance sentiment is less than 119.5, and the business conditions in 5 years sentiment is less than 79.5, then the bond yield is more likely to increase, signified with a binary response of 1.
 
-spirit_plot
+
+#Prune tree
+
+```{r}
+##use CV
+RNGkind(sample.kind = "Rejection")
+
+set.seed(100)
+
+cv.class<-cv.tree(tree.class.train, K=10, FUN=prune.misclass) ##FUN=prune.misclass so error rate is used to guide CV and pruning, rather than the deviance which is the default (and should not be used in classification).
+
+cv.class
+
+##size of tree chosen by pruning
+trees.num.class<-cv.class$size[which.min(cv.class$dev)]
+
+trees.num.class ##5 terminal nodes. 
+
+##fit tree with size chosen by pruning
+prune.class<-prune.misclass(tree.class.train, best=trees.num.class)
+
+prune.class
+
+summary(prune.class)
+##plot pruned tree
+plot(prune.class)
+text(prune.class, cex=0.75, pretty=0)
+##prediction based on pruned tree for test data
+tree.pred.prune<-predict(prune.class, newdata=test, type="class")
+##overall test error rate
+data2<-cbind(tree.pred.prune,pred.test)
+
+same_value2<-data2 %>%
+  
+  filter(tree.pred.prune==DGS_binary)%>%
+  
+  count()
+
+1-same_value2$n/length(tree.pred.prune)
 ```
 
-What can you infer from these plots? Don't just explain what's in the graph, but speculate or tell a short story (1-2 paragraphs max).
-
-> We can speculate that there is a correlation between the production capacity of a country and its consumption habits, as wine producing nations such as France, Italy and Argentina are all pretty high in the ranking, A similar pattern can be seen for spirit consumers, as carribean countries known for producing rum and soviet countries famous for vodka and the likes all fare pretty high up in the ranking. It is interesting to see countries famous for beer consumption as being lower than one would expect, such as the UK and Germany.
+We can know the predicted bond yield more succinctly based on the splits of our predictors. For instance, if the buying conditions sentiment is below 131, then the bond yield is more likely to decrease, signified by a binary response of 0. However, if the buying conditions sentiment is above 131, the personal finance sentiment is less than 119.5, then the bond yield is likely to increase, signified with a binary response of 1. Or the personal finance sentiment is larger than 119.5 with the business conditions in 5 years sentiment between 104.5 adn 108.5, then the bond yield is more likely to increase, signified with a binary response of 1.
 
 
+# Bagging
 
+```{r}
+library('randomForest')
+
+RNGkind(sample.kind = "Rejection")
+
+set.seed(100)
+
+bag.class<-randomForest(factor(DGS_binary)~ PF_Current + PF_Expected + BC_12months + BC_5years + 
+                          BuyConditions, data=train, mtry=5, importance=TRUE)
+
+bag.class
+
+importance(bag.class)
+
+##graphical version
+varImpPlot(bag.class)
+
+##prediction based on bagging for test data
+pred.bag<-predict(bag.class, newdata=test)
+
+##overall test error rate
+data3<-cbind(pred.bag,pred.test)
+
+same_value3<-data3 %>%
+  
+  filter(pred.bag==DGS_binary)%>%
+  
+  count()
+
+1-same_value3$n/length(pred.bag)
+```
+
+
+```{r}
+##Random forests
+
+RNGkind(sample.kind = "Rejection")
+
+set.seed(100)
+
+rf.class<-randomForest(factor(DGS_binary)~ PF_Current + PF_Expected + BC_12months + BC_5years + BuyConditions, data=train, mtry=2,importance=TRUE)
+
+rf.class
+
+importance(rf.class)
+
+##graphical version
+varImpPlot(rf.class)
+
+##prediction based on Random forests for test data
+pred.rf<-predict(rf.class, newdata=test)
+
+##overall test error rate
+data4<-cbind(pred.rf,pred.test)
+
+same_value4<-data4 %>%
+  
+  filter(pred.rf==DGS_binary)%>%
+  
+  count()
+
+1-same_value4$n/length(pred.rf) 
+```
+
+Bagging and random forest don’t seem to improve the performance of our model. Bagging has a test MSE of 0.5344828 and random forest has a test MSE of 0.5517241. For both bagging and random forest, BuyConditions is found to be the most important variable.
+
+> In conclusion, consumer sentiment does not seem to be as capable of predicting whether bond yield will either increase or decrease as it is of predicting the bond yield value. When we used bagging and random forest, the test MSE’s did not decrease as it did for bond yield, so it seems that bond yield increase or decrease is harder to predict than the value itself, which is surprising. This was surprising because typically you would employ bagging and random forest methods in order to minimize variance, but this may be a result of overfitting to the noise within the data. All the test MSE’s for the classification decision trees hovered around low to mid 50%, and while that is not as bad as it could be, it is difficult to say that consumer sentiment significantly predicts whether bond yield will increase or decrease.

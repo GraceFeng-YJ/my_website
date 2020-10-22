@@ -13,6 +13,6 @@ blogdown::new_site(theme = "MarcusVirg/forty",
           empty_dirs = TRUE,
           to_yaml = TRUE)
 
-
+blogdown::serve_site()
 
 
