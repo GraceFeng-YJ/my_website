@@ -1,0 +1,230 @@
+# Site settings
+baseURL = "https://gracefeng-portfolio-website.netlify.app/"
+languageCode = "en-us"
+title = "Portfolio website for Grace Feng"
+theme = "forty"
+
+# Enter your tracking code to enable Google Analytics
+googleAnalytics = ""
+
+# Enter your disqus shortname to enable comments
+disqusShortname = ""
+
+[params]
+  # You can use Markdown syntax for urls [text](//url.to/source)
+  # To create multi-line text in strings use the """example Text""" format
+  #
+  # All icons using Fontawesome's icon font. Look at fontawesome.io/icons
+  # for more icons. The icons are represented by their corresponding
+  # CSS class.
+
+  # Provide your metadata here.
+  name = "Grace Feng"
+  description = "This is my personal website. Nice to meet you!"
+
+  # Link custom assets relative to /static
+  custom_css = []
+  custom_js  = []
+  favicon    = "favicon.ico"
+
+  # Just a custom image variable, please define it in .md files for content.
+  image = ""
+
+  # 404 error customization
+  [params.error404]
+    heading = "Page couldn't be found"
+    text = "Please visit [this page](/)"
+
+  # Navigation Section
+  [params.navigation]
+    title = "Grace"
+    subtitle = "Porfolio website"
+    menu = "Menu"
+    # Optional logo as brand stored in img/
+    # logo = "logo.png"
+
+    [[params.navigation.links]]
+      name = "Home"
+      url = "#"
+
+    [[params.navigation.links]]
+      name = "Blogs"
+      url = "blogs"
+
+   # [[params.navigation.links]]
+     # name = "Generic Blog"
+    #  url = "blogs/ipsum"
+
+   # [[params.navigation.links]]
+    #  name = "Elements"
+     # url = "elements.html"
+
+    # Add custom links here by uncommenting code below. To remove links just delete
+    # the [[params.navigation.links]] map associated with that link. Copy and paste
+    # code below if you need more links. Buttons work in the same way.
+    # [[params.navigation.links]]
+    #    name = "NameOfLink"
+    #    url = "UrlOfLink"
+
+    # Button Style 1
+    [[params.navigation.button1]]
+      name = "My projects"
+      url = "blogs"
+
+    # Button Style 2
+   # [[params.navigation.button2]]
+    #  name = "Log In"
+    #  url = "#"
+
+
+  # Banner section
+  [params.banner]
+    # To change the background image on the homepage banner, replace 'banner.jpg' in
+    # the 'static/img' folder.
+    title = "Hi, my name is Grace"
+    subtitle = "This is my personal site where you could know more about me and my projects."
+    buttonText = "Get Started"
+
+
+  # Tiles Section
+  [params.tiles]
+    enable = true
+    # Display your showcases here.
+    
+    [[params.tiles.showcase]]
+      title = "Returns of financial stocks"
+      subtitle = "Is the riskier stock expected to have higher return?"
+      image = "pic11.jpg"
+      url = "blogs/blog5"
+
+    [[params.tiles.showcase]]
+      title = "IBM HR Analytics"
+      subtitle = " What is the decisive factor of income increase?"
+      image = "pic12.jpg"
+      url = "blogs/blog6"
+
+    [[params.tiles.showcase]]
+      title = "Capital Asset Pricing Model (CAPM)"
+      subtitle = "Run linear regressions to estimate the alpha and beta of APPL"
+      image = "pic13.jpg"
+      url = "blogs/blog7"
+
+    [[params.tiles.showcase]]
+      title = "Bond yields and consumer sentiment"
+      subtitle = "Can consumer sentiment be used to predict whether bond yields will increase or decrease?"
+      image = "pic14.jpg"
+      url = "blogs/blog8"
+
+    #[[params.tiles.showcase]]
+     # title = "Consequat"
+     # subtitle = "Ipsum Dolor Sit Amet"
+     # image = "pic05.jpg"
+     # url = "blogs/ipsum"
+
+   # [[params.tiles.showcase]]
+     # title = "Etiam"
+     # subtitle = "Feugiat Amet Tempus"
+     # image = "pic06.jpg"
+     # url = "blogs/ipsum"
+    # You can make more showcases by copy and pasting the code above
+
+  [params.blog]
+    # All blogs defined in their own files. You can find example blogs
+    # at 'exampleSite/content/blogs'. Copy the 'blogs' folder into the 'content' directory
+    # at the root of this Hugo site.
+    # For more informtion take a look at the README.
+    # To add more blogs just copy and paste the code.
+
+  # Section Type Two
+  [params.two]
+    enable = true
+    title = "Self Introduction"
+    subtitle = """I currently reading for master in financial analysis at LBS and wonder to 
+    pursue my future career in the finance industry. I breaked into 
+    the industry and ensured my first internship at Sierra Madre Group by enhancing interpersonal 
+    skills and sending hundreds of cold mails and calls. From this experience, I was able to have 
+    a glimpse of how finance help to provide operating budgets and revenue forecasts for management 
+    teams of companies. Then, I joined Institutional Capital Advisory and focused more on client-facing 
+    jobs. By arranging road shows, financial news releases and annual shareholder meetings, I had 
+    success in leading my client which is a well-known fashion brand in China to increase visibility. 
+    After these two internships, I realized that well roundedness is probably the best word to describe 
+    a successful financial professional. The holistic approach could sometimes be the best alternative. 
+    I put this discipline into my next two internships at Affinity Management and Pivoton Capital.  
+    I had an excellent opportunity to develop my decision-making by working on strategic deals like the 
+    acquisition of one Canadian software company.Furthermore, I reassured myself that finance industry 
+    would be my destination."""
+    buttonText = "Get Started"
+    url = "blogs"
+
+
+  # Contact section
+  [params.contact]
+    enable = true
+    buttonSend = "Send message"
+    buttonClear = "Clear"
+
+    # Since this template is static, the contact form uses www.formspree.io as a
+    # proxy. The form makes a POST request to their servers to send the actual
+    # email. Visitors can send up to a 1000 emails each month for free.
+    #
+    # What you need to do for the setup?
+    #
+    # - set your email address under 'email' below and uncomment
+    # - upload the generated site to your server
+    # - send a dummy email yourself to confirm your account
+    # - click the confirm link in the email from www.formspree.io
+    # - you're done. Happy mailing!
+    formEmail = "graceduo@hotmail.com"
+
+    # Contact Section
+    # You can add multiple emails, phone numbers, or addresses
+    # by copying the corresponding map with frontmatter code.
+    [[params.contact.email]]
+    title = "Email"
+    email = "graceduo@hotmail.com"
+
+    [[params.contact.phone]]
+    title = "Phone"
+    phone = "+86 15305256029"
+
+    [[params.contact.address]]
+    title = "Address"
+    street = "London Business School,Regent's Park"
+    city = "London,Greater London,NW1 4SA"
+    country = "United Kingdom"
+
+  # Footer section
+  [params.footer]
+    enable = true
+  #  copyright = "Company Name"
+
+    # Uses font awesome icons
+    #[[params.footer.social]]
+    #  icon = "fa-twitter"
+     # url= "https://www.twitter.com"
+     # label = "Twitter"
+
+    [[params.footer.social]]
+      icon = "fa-facebook"
+      url= "https://www.facebook.com/yajie.feng.5"
+      label = "Facebook"
+
+    [[params.footer.social]]
+      icon = "fa-instagram"
+      url= "https://www.instagram.com/grace.f_28/"
+      label = "Instagram"
+    
+    [[params.footer.social]]
+      icon = "fa-github"
+      url= "https://github.com/GraceFeng-YJ"
+      label = "GitHub"
+
+    [[params.footer.social]]
+      icon = "fa-linkedin"
+      url= "https://www.linkedin.com/in/yajie-grace-feng-01911014a/"
+      label = "LinkedIn"
+
+    #[[params.footer.quicklinks]]
+     # text = "Design: "
+      #url= "https://www.html5up.net"
+      #alt = "HTML5 UP'
